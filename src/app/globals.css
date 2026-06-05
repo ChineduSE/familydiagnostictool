@@ -1,0 +1,42 @@
+@import 'tailwindcss';
+
+/* Brand design tokens — exposed as Tailwind utilities (bg-brand-black, text-brand-gold, font-display, …) */
+@theme {
+  --color-brand-black: #1a1a1a;
+  --color-brand-gold: #f0c040;
+  --color-brand-goldhover: #ffd152;
+  --color-brand-white: #ffffff;
+  --color-brand-offwhite: #f5f0e8;
+  --color-brand-muted: #706c65;
+
+  --font-sans: var(--font-inter), Arial, sans-serif;
+  --font-display: var(--font-playfair), Georgia, serif;
+}
+
+@layer base {
+  html,
+  body {
+    min-height: 100%;
+  }
+
+  body {
+    @apply bg-brand-offwhite text-brand-black font-sans antialiased;
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer components {
+  /* Shared gold pill button used on the intro, gate, and results pages */
+  .btn-primary {
+    @apply inline-flex min-h-[46px] cursor-pointer items-center justify-center rounded-full bg-brand-gold px-6 py-3 text-sm font-bold text-brand-black no-underline transition-[transform,background-color] duration-150 hover:bg-brand-goldhover active:scale-95 disabled:cursor-not-allowed disabled:opacity-55;
+  }
+
+  /* Text input shared across the gate form */
+  .field-input {
+    @apply min-h-[46px] w-full rounded-md border border-[#d5d1ca] bg-brand-white px-3 py-[11px] outline-none focus:border-brand-gold focus:ring-[3px] focus:ring-brand-gold/30;
+  }
+}
