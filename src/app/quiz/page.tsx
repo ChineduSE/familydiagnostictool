@@ -50,13 +50,19 @@ export default function QuizPage() {
   }
 
   return (
-    <main className="min-h-screen bg-brand-black px-5 py-8 text-brand-white">
-      <section className="mx-auto flex min-h-[calc(100vh-64px)] w-full max-w-[680px] flex-col justify-center">
-        <div>
-          <p className="mb-[10px] text-xs text-white/60">
+    <main className="min-h-screen bg-brand-offwhite px-5 py-8 text-brand-black">
+      <section className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-[640px] flex-col justify-center text-center">
+        {/* Section header — stands out above the progress bar */}
+        <h2 className="mb-6 font-display text-[clamp(22px,4.5vw,32px)] font-semibold text-brand-black">
+          {question.section}
+        </h2>
+
+        {/* Progress */}
+        <div className="mx-auto w-full max-w-[440px]">
+          <p className="mb-[10px] text-xs font-medium text-brand-muted">
             Question {current} of {QUESTIONS.length}
           </p>
-          <div className="h-1.5 overflow-hidden rounded-full bg-white/20">
+          <div className="h-1.5 overflow-hidden rounded-full bg-black/10">
             <div
               className="h-full rounded-[inherit] bg-brand-gold transition-[width] duration-300"
               style={{ width: `${(current / QUESTIONS.length) * 100}%` }}
@@ -64,45 +70,46 @@ export default function QuizPage() {
           </div>
         </div>
 
-        <div className="mt-8">
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-gold">
-            {question.section}
-          </p>
-          <p className="my-5 mb-7 text-[clamp(21px,4vw,28px)] leading-[1.48]">{question.text}</p>
-          <div className="grid grid-cols-5 gap-[9px] max-[620px]:grid-cols-1">
-            {Object.entries(SCALE_LABELS).map(([value, label]) => {
-              const numericValue = Number(value)
-              const selected = session.answers[session.currentIndex] === numericValue
+        {/* Question */}
+        <p className="mx-auto mb-7 mt-8 max-w-[560px] text-[clamp(19px,3.5vw,26px)] leading-[1.5]">
+          {question.text}
+        </p>
 
-              return (
-                <button
-                  className={cn(
-                    'min-h-[82px] rounded-[10px] border px-[5px] py-[10px] transition-[transform,color,border-color,background-color] duration-150 active:scale-95',
-                    'max-[620px]:flex max-[620px]:min-h-[52px] max-[620px]:items-center max-[620px]:gap-[10px] max-[620px]:px-4 max-[620px]:text-left',
-                    selected
-                      ? 'border-brand-gold bg-brand-gold text-brand-black'
-                      : 'border-white/30 bg-transparent text-brand-white hover:border-brand-gold hover:bg-brand-gold hover:text-brand-black'
-                  )}
-                  key={value}
-                  type="button"
-                  onClick={() => selectAnswer(numericValue)}
-                >
-                  <span className="mb-2 block text-[19px] font-bold max-[620px]:mb-0">{value}</span>
-                  <span className="block text-[11px]">{label}</span>
-                </button>
-              )
-            })}
-          </div>
-          {session.currentIndex > 0 && (
-            <button
-              className="mt-[26px] cursor-pointer border-0 bg-transparent p-0 text-white/65 hover:text-white"
-              type="button"
-              onClick={goBack}
-            >
-              ← Back
-            </button>
-          )}
+        {/* Answer scale */}
+        <div className="mx-auto grid w-full max-w-[560px] grid-cols-5 gap-[9px] max-[620px]:grid-cols-1">
+          {Object.entries(SCALE_LABELS).map(([value, label]) => {
+            const numericValue = Number(value)
+            const selected = session.answers[session.currentIndex] === numericValue
+
+            return (
+              <button
+                className={cn(
+                  'min-h-[82px] rounded-[10px] border px-[5px] py-[10px] transition-[transform,border-color,background-color] duration-150 active:scale-95',
+                  'max-[620px]:flex max-[620px]:min-h-[52px] max-[620px]:items-center max-[620px]:justify-center max-[620px]:gap-[10px] max-[620px]:px-4',
+                  selected
+                    ? 'border-brand-gold bg-brand-gold text-brand-black'
+                    : 'border-[#d9d4cb] bg-brand-white text-brand-black hover:border-brand-gold hover:bg-brand-gold'
+                )}
+                key={value}
+                type="button"
+                onClick={() => selectAnswer(numericValue)}
+              >
+                <span className="mb-2 block text-[19px] font-bold max-[620px]:mb-0">{value}</span>
+                <span className="block text-[11px]">{label}</span>
+              </button>
+            )
+          })}
         </div>
+
+        {session.currentIndex > 0 && (
+          <button
+            className="mx-auto mt-7 cursor-pointer border-0 bg-transparent p-0 text-brand-muted transition-colors hover:text-brand-black"
+            type="button"
+            onClick={goBack}
+          >
+            ← Back
+          </button>
+        )}
       </section>
     </main>
   )

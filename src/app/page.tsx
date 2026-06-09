@@ -22,20 +22,20 @@ export default function HomePage() {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-brand-black px-5 py-8 text-brand-white">
-      <section className="mx-auto w-full max-w-[680px]">
-        <p className="mb-4 text-xs font-bold uppercase tracking-[0.14em] text-brand-gold">
+    <main className="grid min-h-screen place-items-center bg-brand-offwhite px-5 py-10 text-brand-black">
+      <section className="mx-auto flex w-full max-w-[640px] flex-col items-center text-center">
+        <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-brand-gold">
           Family Connection Diagnosis™
         </p>
-        <h1 className="font-display text-[clamp(40px,8vw,64px)] leading-[1.06]">
+        <h1 className="font-display text-[clamp(36px,7vw,60px)] leading-[1.08]">
           Discover the State of Your Family Connection
         </h1>
-        <p className="mt-[22px] text-[17px] leading-[1.7] text-white/70">
+        <p className="mt-6 max-w-[540px] text-[17px] leading-[1.7] text-brand-muted">
           Answer 12 honest questions and get a personalised diagnosis of your parent-child
           relationship — with clear guidance on your next steps.
         </p>
-        <p className="mt-[18px] text-[13px] text-white/55">Takes about 5 minutes</p>
-        <button className="btn-primary mt-[30px]" type="button" onClick={startDiagnosis}>
+        <p className="mt-4 text-[13px] text-brand-muted">Takes about 5 minutes</p>
+        <button className="btn-primary mt-8" type="button" onClick={startDiagnosis}>
           Start the Diagnosis
         </button>
       </section>
