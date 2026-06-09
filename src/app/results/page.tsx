@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CTA_LABEL, RESULTS_COPY, SCORE_LABELS } from '@/lib/questions'
 import { loadResult } from '@/lib/quiz-store'
+import { buildWhatsAppUrl } from '@/lib/whatsapp'
 import { cn } from '@/lib/utils'
 import type { QuizResult, ScoreRange } from '@/types'
 
@@ -19,8 +20,7 @@ const BADGE_VARIANT: Record<ScoreRange, string> = {
   strong: 'bg-[#dcfce7] text-[#166534]',
 }
 
-// Only ever link out to http(s) targets — never javascript:/data: schemes,
-// even if a bad value reaches the client from settings.
+// Only ever link out to http(s) targets — never javascript:/data: schemes.
 function safeHttpUrl(url: string): string {
   return /^https?:\/\//i.test(url) ? url : ''
 }
@@ -70,7 +70,14 @@ export default function ResultsPage() {
     setResult(storedResult)
     fetch('/api/settings')
       .then((response) => response.json())
-      .then((settings: { whatsappCtaUrl?: string }) => setCtaUrl(settings.whatsappCtaUrl ?? ''))
+      .then((settings: { whatsappNumber?: string; whatsappMessageTemplate?: string }) => {
+        setCtaUrl(
+          buildWhatsAppUrl(settings.whatsappNumber, settings.whatsappMessageTemplate, {
+            firstName: storedResult.firstName,
+            score: storedResult.score,
+          })
+        )
+      })
       .catch(() => setCtaUrl(''))
   }, [router])
 

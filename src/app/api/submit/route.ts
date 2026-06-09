@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { QUESTIONS, getScoreRange } from '@/lib/questions'
 import { submitSchema } from '@/lib/submit-schema'
 import { sendResultsEmail } from '@/lib/send-results-email'
+import { buildWhatsAppUrl } from '@/lib/whatsapp'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 
 export async function POST(request: Request) {
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
   const supabase = createSupabaseAdmin()
   let contactId: string | null = null
   let assessmentId: string | null = null
-  let ctaUrl = process.env.NEXT_PUBLIC_WHATSAPP_CTA_URL ?? ''
+  let ctaUrl = ''
   let logoUrl: string | undefined
 
   if (supabase) {
@@ -79,11 +80,14 @@ export async function POST(request: Request) {
 
     const { data: settings } = await supabase
       .from('settings')
-      .select('whatsapp_cta_url, logo_url')
+      .select('whatsapp_number, whatsapp_message_template, logo_url')
       .eq('id', 1)
       .maybeSingle()
 
-    if (settings?.whatsapp_cta_url) ctaUrl = settings.whatsapp_cta_url
+    ctaUrl = buildWhatsAppUrl(settings?.whatsapp_number, settings?.whatsapp_message_template, {
+      firstName,
+      score,
+    })
     if (settings?.logo_url) logoUrl = settings.logo_url
   }
 

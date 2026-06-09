@@ -84,9 +84,9 @@ export function getScoreRange(score: number): ScoreRange {
 }
 
 // Label for the call-to-action button shown on the results page and in emails.
-// The link target is Ibironke's personal WhatsApp (set in admin settings).
-// NOTE: wording is an open detail for Ibironke to confirm.
-export const CTA_LABEL = 'Chat with Ibironke on WhatsApp'
+// The link opens Ibironke's personal WhatsApp with a pre-written, personalised
+// message (number + template are set in admin settings).
+export const CTA_LABEL = 'Message Ibironke on WhatsApp'
 
 // Instant results email copy — verbatim from Ibironke's toolkit (Part 4).
 // [First name] and [SCORE] are substituted at send time; [CTA BUTTON] marks

@@ -1,30 +1,25 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 
-// The CTA link is rendered into an href and opened in a new tab. Only expose
-// http(s) URLs so a malformed or tampered value can never become a
-// javascript:/data: link on the public results page.
-function safeHttpUrl(url: string | null | undefined): string {
-  return url && /^https?:\/\//i.test(url) ? url : ''
-}
-
+// Public settings read for the results page. Returns the WhatsApp number and
+// message template; the client builds a personalised wa.me link from them. The
+// number is digits-only and the final link is always a hardcoded https://wa.me
+// URL, so there is no scheme-injection risk.
 export async function GET() {
   const supabase = createSupabaseAdmin()
 
   if (supabase) {
     const { data } = await supabase
       .from('settings')
-      .select('whatsapp_cta_url')
+      .select('whatsapp_number, whatsapp_message_template')
       .eq('id', 1)
       .maybeSingle()
 
-    const ctaUrl = safeHttpUrl(data?.whatsapp_cta_url)
-    if (ctaUrl) {
-      return NextResponse.json({ whatsappCtaUrl: ctaUrl })
-    }
+    return NextResponse.json({
+      whatsappNumber: data?.whatsapp_number ?? '',
+      whatsappMessageTemplate: data?.whatsapp_message_template ?? '',
+    })
   }
 
-  return NextResponse.json({
-    whatsappCtaUrl: safeHttpUrl(process.env.NEXT_PUBLIC_WHATSAPP_CTA_URL),
-  })
+  return NextResponse.json({ whatsappNumber: '', whatsappMessageTemplate: '' })
 }
