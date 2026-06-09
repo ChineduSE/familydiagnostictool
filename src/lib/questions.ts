@@ -83,6 +83,93 @@ export function getScoreRange(score: number): ScoreRange {
   return 'strong'
 }
 
+// Label for the call-to-action button shown on the results page and in emails.
+// The link target is Ibironke's personal WhatsApp (set in admin settings).
+// NOTE: wording is an open detail for Ibironke to confirm.
+export const CTA_LABEL = 'Chat with Ibironke on WhatsApp'
+
+// Instant results email copy — verbatim from Ibironke's toolkit (Part 4).
+// [First name] and [SCORE] are substituted at send time; [CTA BUTTON] marks
+// where the WhatsApp call-to-action button is injected.
+export const EMAIL_COPY: Record<ScoreRange, { subject: string; body: string }> = {
+  at_risk: {
+    subject: 'Your Family Connection results, [First name]',
+    body: `Hi [First name],
+
+Thank you for taking the Family Connection Diagnosis™. I know it takes honesty to sit with those questions — and I want you to know that I don't take that lightly.
+
+Your score of [SCORE]/60 places you in the Connection at Risk range.
+
+I want to be straightforward with you: this score isn't about blame. It's about timing. The patterns that create distance between parents and children rarely happen because of one big moment — they build slowly, in the small decisions we make every day without realising their weight.
+
+The encouraging truth is this: connection can be rebuilt. I've seen it happen in families where the gap felt enormous. It starts with understanding exactly where and why the distance formed — and then making a small number of deliberate changes.
+
+Based on your responses, the areas I'd focus on first are:
+→ Communication — creating the conditions where your child feels safe to come to you
+→ Behavior — learning to read what difficult behavior is actually communicating
+→ Emotional availability — making your presence felt, not just your presence known
+
+I'd love to help you map this out personally.
+
+A 1-on-1 Family Connection Session gives us the space to go deeper into your specific results, understand your family's unique dynamic, and build a reconnection plan that fits your real life — not a generic checklist.
+
+[CTA BUTTON]
+
+I'm glad you're here, [First name]. This is the right direction.
+
+Warmly,
+Ibironke`,
+  },
+  under_strain: {
+    subject: 'Your Family Connection results, [First name]',
+    body: `Hi [First name],
+
+Your Family Connection Score is in — and I want to give you the full picture.
+
+Your score of [SCORE]/60 places you in the Connection Under Strain range.
+
+This is actually one of the most important scores to pay attention to — not because it signals crisis, but because it signals a window. You have real strengths in your home. And you also have areas where, without some intentional attention, the distance will quietly widen.
+
+Based on your responses, here's what I'm noticing:
+
+The areas where you're doing well are holding your family together. The areas under strain tend to be the ones that get deprioritised when life gets full — the routines, the repair moments after conflict, the device-free time that feels hard to protect.
+
+These are fixable. Not with a complete overhaul, but with two or three consistent shifts.
+
+If you'd like to know exactly what those shifts are for your family specifically, a Family Connection Session with me is the clearest next step.
+
+[CTA BUTTON]
+
+You're not far from where you want to be. Let's close the gap together.
+
+Warmly,
+Ibironke`,
+  },
+  strong: {
+    subject: 'Your Family Connection results, [First name]',
+    body: `Hi [First name],
+
+Your results are in — and they're worth celebrating.
+
+Your Family Connection Score of [SCORE]/60 places you in the Connection is Strong range.
+
+This tells me that you've been doing something right, consistently. The warmth, the routines, the willingness to show up even when it's hard — your child is experiencing that, even on the days it doesn't feel like enough.
+
+I also want to be honest with you: a strong score today doesn't mean the work is done. Family connection is a living, moving thing. As children grow, their needs shift — and the habits that worked beautifully at one stage can quietly stop working at the next.
+
+The parents I worry least about are the ones who are curious and proactive. The fact that you took this diagnosis tells me you're one of them.
+
+If you'd like to understand your score in more depth — including the subtle areas to keep an eye on as your child moves through their next developmental stage — a Family Connection Session is a great investment in staying ahead.
+
+[CTA BUTTON]
+
+Thank you for taking this seriously, [First name]. Your family is fortunate to have you.
+
+Warmly,
+Ibironke`,
+  },
+}
+
 export const RESULTS_COPY: Record<ScoreRange, string> = {
   at_risk: `[First name], this score needs your attention now. And the fact that you're here, reading this, tells me you already sense that something important is slipping.
 

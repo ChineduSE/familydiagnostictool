@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { RESULTS_COPY, SCORE_LABELS } from '@/lib/questions'
+import { CTA_LABEL, RESULTS_COPY, SCORE_LABELS } from '@/lib/questions'
 import { loadResult } from '@/lib/quiz-store'
 import { cn } from '@/lib/utils'
 import type { QuizResult, ScoreRange } from '@/types'
@@ -42,7 +42,7 @@ function renderCopy(result: QuizResult, ctaUrl: string) {
           rel="noreferrer"
           target="_blank"
         >
-          Join the Community
+          {CTA_LABEL}
         </a>
       ) : null
     }
