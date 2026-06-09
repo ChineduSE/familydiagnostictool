@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 
+// The CTA link is rendered into an href and opened in a new tab. Only expose
+// http(s) URLs so a malformed or tampered value can never become a
+// javascript:/data: link on the public results page.
+function safeHttpUrl(url: string | null | undefined): string {
+  return url && /^https?:\/\//i.test(url) ? url : ''
+}
+
 export async function GET() {
   const supabase = createSupabaseAdmin()
 
@@ -11,10 +18,13 @@ export async function GET() {
       .eq('id', 1)
       .maybeSingle()
 
-    if (data?.whatsapp_cta_url) {
-      return NextResponse.json({ whatsappCtaUrl: data.whatsapp_cta_url })
+    const ctaUrl = safeHttpUrl(data?.whatsapp_cta_url)
+    if (ctaUrl) {
+      return NextResponse.json({ whatsappCtaUrl: ctaUrl })
     }
   }
 
-  return NextResponse.json({ whatsappCtaUrl: process.env.NEXT_PUBLIC_WHATSAPP_CTA_URL ?? '' })
+  return NextResponse.json({
+    whatsappCtaUrl: safeHttpUrl(process.env.NEXT_PUBLIC_WHATSAPP_CTA_URL),
+  })
 }

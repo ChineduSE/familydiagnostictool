@@ -19,7 +19,14 @@ const BADGE_VARIANT: Record<ScoreRange, string> = {
   strong: 'bg-[#dcfce7] text-[#166534]',
 }
 
+// Only ever link out to http(s) targets — never javascript:/data: schemes,
+// even if a bad value reaches the client from settings.
+function safeHttpUrl(url: string): string {
+  return /^https?:\/\//i.test(url) ? url : ''
+}
+
 function renderCopy(result: QuizResult, ctaUrl: string) {
+  const safeCtaUrl = safeHttpUrl(ctaUrl)
   const copy = RESULTS_COPY[result.scoreRange]
     .replaceAll('[First name]', result.firstName)
     .replaceAll('[SCORE]', String(result.score))
@@ -27,10 +34,10 @@ function renderCopy(result: QuizResult, ctaUrl: string) {
 
   return sections.map((section, index) => {
     if (section === '[CTA BUTTON]') {
-      return ctaUrl ? (
+      return safeCtaUrl ? (
         <a
           className="btn-primary my-[10px] mb-[26px]"
-          href={ctaUrl}
+          href={safeCtaUrl}
           key={index}
           rel="noreferrer"
           target="_blank"
