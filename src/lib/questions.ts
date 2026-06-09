@@ -189,10 +189,7 @@ The next step is a 1-on-1 Family Connection Session with Ibironke, where we look
 [CTA BUTTON]
 
 You showed up for this diagnosis. That already tells me something important about the kind of parent you are. Don't let that courage go to waste.`,
-  under_strain: `Your Family Connection Score: [SCORE]/60
-Connection under strain
-
-[First name], you have real strengths here — and this score shows them.
+  under_strain: `[First name], you have real strengths here — and this score shows them.
 
 But this is not the moment to exhale.
 

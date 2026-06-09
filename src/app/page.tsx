@@ -8,7 +8,12 @@ export default function HomePage() {
   const router = useRouter()
 
   useEffect(() => {
-    if (loadSession()) router.replace('/quiz')
+    // Only resume into the quiz if the parent has actually answered something.
+    // A freshly created (all-null) session still shows the intro.
+    const session = loadSession()
+    if (session && session.answers.some((answer) => answer !== null)) {
+      router.replace('/quiz')
+    }
   }, [router])
 
   function startDiagnosis() {
