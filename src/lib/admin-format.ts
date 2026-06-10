@@ -1,4 +1,4 @@
-import type { ScoreRange } from '@/types'
+import type { ScoreRange, BroadcastStatus } from '@/types'
 
 // Badge colours per score band, tuned for the light admin background.
 export const RANGE_BADGE: Record<ScoreRange, string> = {
@@ -25,4 +25,25 @@ export function emailStatus(message?: {
   if (message.first_opened_at) return 'Opened'
   if (message.delivered_at) return 'Delivered'
   return 'Sent'
+}
+
+// Status pill colours, tuned for the light admin background.
+export const BROADCAST_STATUS_BADGE: Record<BroadcastStatus, string> = {
+  draft: 'bg-black/5 text-brand-muted',
+  scheduled: 'bg-[#dbeafe] text-[#1e40af]',
+  sent: 'bg-[#dcfce7] text-[#166534]',
+  cancelled: 'bg-[#fde2e2] text-[#991b1b]',
+  failed: 'bg-[#fde2e2] text-[#991b1b]',
+}
+
+const BROADCAST_STATUS_LABELS: Record<BroadcastStatus, string> = {
+  draft: 'Draft',
+  scheduled: 'Scheduled',
+  sent: 'Sent',
+  cancelled: 'Cancelled',
+  failed: 'Failed',
+}
+
+export function broadcastStatusLabel(status: BroadcastStatus): string {
+  return BROADCAST_STATUS_LABELS[status]
 }
