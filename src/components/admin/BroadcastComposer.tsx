@@ -125,8 +125,10 @@ export function BroadcastComposer({ broadcast }: BroadcastComposerProps) {
             placeholder="A note for you, [First name]"
           />
           <p className="mt-1 text-xs text-brand-muted">
-            Use <code className="rounded bg-black/5 px-1">[First name]</code> to insert each
-            parent&apos;s first name when sent.
+            Type <code className="rounded bg-black/5 px-1">[First name]</code> anywhere in the
+            subject <em>or</em> the message — it&apos;s replaced with each parent&apos;s first name
+            when the email is sent. In the message, use the{' '}
+            <span className="font-medium">+ [First name]</span> button below.
           </p>
         </div>
 
@@ -207,6 +209,7 @@ export function BroadcastComposer({ broadcast }: BroadcastComposerProps) {
 
       <div className="lg:sticky lg:top-6 lg:self-start">
         <EmailPreview
+          subject={subject}
           bodyHtml={bodyHtml}
           ctaLabel={ctaLabel || undefined}
           ctaUrl={ctaUrl || undefined}

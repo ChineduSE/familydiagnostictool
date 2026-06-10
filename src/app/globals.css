@@ -40,3 +40,50 @@
     @apply min-h-[46px] w-full rounded-md border border-[#d5d1ca] bg-brand-white px-3 py-[11px] outline-none focus:border-brand-gold focus:ring-[3px] focus:ring-brand-gold/30;
   }
 }
+
+/*
+ * Rich-text content (broadcast editor body). Tailwind v4's preflight strips list
+ * markers, indentation and link styling, which made the Tiptap editor look
+ * broken. These rules restore them so bullets, numbers and links render — both
+ * while editing and (matched in the iframe preview) as they will in the email.
+ */
+.rich-text {
+  line-height: 1.6;
+}
+.rich-text p {
+  margin: 0 0 0.75rem;
+}
+.rich-text ul,
+.rich-text ol {
+  margin: 0 0 0.75rem;
+  padding-left: 1.5rem;
+}
+.rich-text ul {
+  list-style: disc;
+}
+.rich-text ol {
+  list-style: decimal;
+}
+.rich-text li {
+  margin: 0.15rem 0;
+}
+.rich-text li p {
+  margin: 0;
+}
+.rich-text a {
+  color: #1155cc;
+  text-decoration: underline;
+}
+.rich-text strong {
+  font-weight: 700;
+}
+.rich-text em {
+  font-style: italic;
+}
+.rich-text h1,
+.rich-text h2,
+.rich-text h3 {
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  line-height: 1.3;
+}

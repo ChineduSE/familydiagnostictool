@@ -21,7 +21,8 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
     editorProps: {
       attributes: {
-        class: 'min-h-[220px] rounded-b-lg border border-t-0 border-black/15 bg-white px-4 py-3 focus:outline-none prose prose-sm max-w-none',
+        class:
+          'rich-text min-h-[220px] rounded-b-lg border border-t-0 border-black/15 bg-white px-4 py-3 focus:outline-none',
       },
     },
   })
@@ -35,18 +36,19 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
     )
 
   function addLink() {
-    const url = window.prompt('Link URL (https://…)')
+    const previous = editor!.getAttributes('link').href as string | undefined
+    const url = window.prompt('Link URL (https://…)', previous ?? 'https://')
     if (url === null) return
-    if (url === '') {
+    if (url.trim() === '') {
       editor!.chain().focus().extendMarkRange('link').unsetLink().run()
       return
     }
-    editor!.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+    editor!.chain().focus().extendMarkRange('link').setLink({ href: url.trim() }).run()
   }
 
   return (
     <div>
-      <div className="flex gap-1 rounded-t-lg border border-black/15 bg-brand-offwhite p-1">
+      <div className="flex flex-wrap gap-1 rounded-t-lg border border-black/15 bg-brand-offwhite p-1">
         <button
           type="button"
           className={btn(editor.isActive('bold'))}
@@ -71,8 +73,31 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
         >
           • List
         </button>
-        <button type="button" className={btn(editor.isActive('link'))} onClick={addLink} aria-label="Link">
+        <button
+          type="button"
+          className={btn(editor.isActive('orderedList'))}
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          aria-label="Numbered list"
+        >
+          1. List
+        </button>
+        <button
+          type="button"
+          className={btn(editor.isActive('link'))}
+          onClick={addLink}
+          aria-label="Link"
+        >
           🔗 Link
+        </button>
+        <span className="mx-1 w-px self-stretch bg-black/10" aria-hidden />
+        <button
+          type="button"
+          className={btn(false)}
+          onClick={() => editor.chain().focus().insertContent('[First name]').run()}
+          aria-label="Insert first name placeholder"
+          title="Inserts each parent's first name when the email is sent"
+        >
+          + [First name]
         </button>
       </div>
       <EditorContent editor={editor} />
