@@ -8,14 +8,8 @@ import { buildWhatsAppUrl } from '@/lib/whatsapp'
 import { cn } from '@/lib/utils'
 import type { QuizResult, ScoreRange } from '@/types'
 
-const PAGE_VARIANT: Record<ScoreRange, string> = {
-  at_risk: 'bg-brand-black text-brand-white',
-  under_strain: 'bg-brand-offwhite text-brand-black',
-  strong: 'bg-brand-offwhite text-brand-black',
-}
-
 const BADGE_VARIANT: Record<ScoreRange, string> = {
-  at_risk: 'bg-[rgba(153,27,27,0.26)] text-[#fecaca]',
+  at_risk: 'bg-[#fde2e2] text-[#991b1b]',
   under_strain: 'bg-[#fef3c7] text-[#92400e]',
   strong: 'bg-[#dcfce7] text-[#166534]',
 }
@@ -84,7 +78,7 @@ export default function ResultsPage() {
   if (!result) return null
 
   return (
-    <main className={cn('min-h-screen px-5 py-[52px]', PAGE_VARIANT[result.scoreRange])}>
+    <main className="min-h-screen bg-brand-offwhite px-5 py-[52px] text-brand-black">
       <section className="mx-auto w-full max-w-[680px]">
         <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-gold">
           Your Family Connection Score
@@ -101,10 +95,6 @@ export default function ResultsPage() {
           {SCORE_LABELS[result.scoreRange]}
         </span>
         <div className="mt-[30px]">{renderCopy(result, ctaUrl)}</div>
-        <p className="mt-9 text-xs leading-[1.55] opacity-65">
-          This is a guided self-assessment for reflection and education. It is not a clinical
-          diagnosis.
-        </p>
       </section>
     </main>
   )
