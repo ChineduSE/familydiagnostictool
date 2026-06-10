@@ -1,10 +1,7 @@
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { emailStatus, formatDate } from '@/lib/admin-format'
-import { RangeBadge } from '@/components/admin/RangeBadge'
 import { RespondentsControls } from '@/components/admin/RespondentsControls'
+import { RespondentRow } from '@/components/admin/RespondentRow'
 import { CopyLinkButton } from '@/components/admin/CopyLinkButton'
-import type { ScoreRange } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -107,26 +104,7 @@ export default async function RespondentsPage({ searchParams }: { searchParams: 
             </thead>
             <tbody>
               {respondents.map((r) => (
-                <tr key={r.id} className="border-b border-black/5 last:border-0">
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/admin/respondents/${r.id}`}
-                      className="font-medium transition-colors hover:text-brand-gold"
-                    >
-                      {r.first_name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-brand-muted">{r.email}</td>
-                  <td className="px-4 py-3 text-brand-muted">{r.phone || '—'}</td>
-                  <td className="px-4 py-3">{r.score} / 60</td>
-                  <td className="px-4 py-3">
-                    <RangeBadge range={r.score_range as ScoreRange} />
-                  </td>
-                  <td className="px-4 py-3 text-brand-muted">{formatDate(r.submitted_at)}</td>
-                  <td className="px-4 py-3 text-brand-muted">
-                    {emailStatus(statusByAssessment.get(r.id))}
-                  </td>
-                </tr>
+                <RespondentRow key={r.id} r={r} status={statusByAssessment.get(r.id)} />
               ))}
             </tbody>
           </table>
