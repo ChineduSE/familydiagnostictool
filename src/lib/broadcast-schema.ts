@@ -19,3 +19,16 @@ export const broadcastSchema = z
   })
 
 export type BroadcastFormData = z.infer<typeof broadcastSchema>
+
+// Draft-save rules: looser than broadcastSchema. Subject required (list title);
+// body may be empty while drafting; CTA optional but a provided URL must be valid.
+export const draftBroadcastSchema = z.object({
+  subject: z.string().trim().min(1, 'Please enter a subject line').max(150),
+  bodyHtml: z.string().default(''),
+  ctaLabel: z.string().trim().max(100).optional(),
+  ctaUrl: z.union([z.string().trim().url('Please enter a valid URL'), z.literal('')]).optional(),
+  includeLogo: z.boolean().default(false),
+  audienceType: audienceTypeEnum,
+})
+
+export type DraftBroadcastData = z.infer<typeof draftBroadcastSchema>
