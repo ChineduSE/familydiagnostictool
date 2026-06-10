@@ -29,18 +29,16 @@ export async function POST(request: Request) {
 
   if (supabase) {
     // Upsert the contact (one row per email, preserved across repeat quizzes).
-    // Consent fields are only written when the parent ticked the box, so a
-    // returning parent never loses a prior consent.
+    // Opt-out model: completing the quiz subscribes the parent, so consent is
+    // always recorded. A parent leaves the audience only by unsubscribing.
     const contactPayload: Record<string, unknown> = {
       email,
       first_name: firstName,
       phone: phone || null,
       latest_score_range: scoreRange,
+      marketing_consent: true,
+      marketing_consent_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    }
-    if (marketingConsent) {
-      contactPayload.marketing_consent = true
-      contactPayload.marketing_consent_at = new Date().toISOString()
     }
 
     const { data: contact, error: contactError } = await supabase

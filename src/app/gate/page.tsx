@@ -30,7 +30,8 @@ export default function GatePage() {
     const firstName = String(formData.get('firstName') ?? '').trim()
     const email = String(formData.get('email') ?? '').trim()
     const phone = String(formData.get('phone') ?? '').trim()
-    const marketingConsent = formData.get('marketingConsent') === 'on'
+    // Opt-out model: taking the quiz subscribes the parent (they can unsubscribe later).
+    const marketingConsent = true
     const nextErrors: FormErrors = {}
 
     if (!firstName) nextErrors.firstName = 'Please enter your first name'
@@ -124,20 +125,13 @@ export default function GatePage() {
             <p className="text-xs leading-[1.55] text-brand-muted">Optional</p>
           </div>
 
-          <label className="flex items-start text-xs leading-[1.55] text-brand-muted">
-            <input className="mr-[7px] mt-[2px] accent-brand-gold" name="marketingConsent" type="checkbox" />
-            <span>
-              I would like to receive helpful resources and updates by email. I can unsubscribe at
-              any time.
-            </span>
-          </label>
-
           <button className="btn-primary" disabled={isSubmitting} type="submit">
             {isSubmitting ? 'Getting your results…' : 'See My Results'}
           </button>
           {errors.api && <p className="text-xs text-[#b91c1c]">{errors.api}</p>}
           <p className="text-xs leading-[1.55] text-brand-muted">
-            Your information is safe. We do not share your details.
+            Your information is safe — we never share your details. By continuing you&apos;ll also
+            receive occasional helpful parenting resources by email, and you can unsubscribe anytime.
           </p>
         </form>
       </section>

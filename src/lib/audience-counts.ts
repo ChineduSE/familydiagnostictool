@@ -1,15 +1,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { AudienceCounts, BroadcastAudience } from '@/lib/audience'
 
-// Counts marketing-consented, non-unsubscribed contacts overall and per band.
-// Works with either the browser or server Supabase client. Uses head:true count
-// queries so no rows are transferred.
+// Counts every contact who took the quiz, overall and per band, excluding only
+// those who explicitly unsubscribed (opt-out model — everyone who completes the
+// quiz is a subscriber). Works with either the browser or server Supabase
+// client. Uses head:true count queries so no rows are transferred.
 export async function fetchAudienceCounts(supabase: SupabaseClient): Promise<AudienceCounts> {
   const base = () =>
     supabase
       .from('contacts')
       .select('*', { count: 'exact', head: true })
-      .eq('marketing_consent', true)
       .is('unsubscribed_at', null)
 
   const band = (b: Exclude<BroadcastAudience, 'all'>) => base().eq('latest_score_range', b)
