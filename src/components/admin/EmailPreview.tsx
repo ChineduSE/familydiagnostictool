@@ -79,9 +79,15 @@ export function EmailPreview({
     </div></body></html>`
 
   // Auto-fit the iframe to its content so the preview grows with the message.
+  // Guarded: reading the frame document can throw if the browser treats it as
+  // cross-origin; never let that crash the composer.
   function resize() {
-    const doc = frameRef.current?.contentWindow?.document
-    if (doc) setHeight(doc.body.scrollHeight + 2)
+    try {
+      const doc = frameRef.current?.contentWindow?.document
+      if (doc) setHeight(doc.body.scrollHeight + 2)
+    } catch {
+      // Keep the current height if the frame isn't readable.
+    }
   }
 
   useEffect(() => {
@@ -101,7 +107,7 @@ export function EmailPreview({
           title="Email preview"
           srcDoc={srcDoc}
           onLoad={resize}
-          sandbox=""
+          sandbox="allow-same-origin"
           className="w-full bg-white"
           style={{ height }}
         />
