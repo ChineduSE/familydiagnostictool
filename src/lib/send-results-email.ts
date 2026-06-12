@@ -2,7 +2,7 @@ import { createElement } from 'react'
 import { render } from '@react-email/components'
 import { ResultsEmail } from '@/emails/ResultsEmail'
 import { EMAIL_COPY } from '@/lib/questions'
-import { createResend, EMAIL_FROM } from '@/lib/resend'
+import { createResend, EMAIL_FROM, EMAIL_REPLY_TO } from '@/lib/resend'
 import type { ScoreRange } from '@/types'
 
 type SendResultsEmailParams = {
@@ -39,6 +39,7 @@ export async function sendResultsEmail(params: SendResultsEmailParams): Promise<
     const { data, error } = await resend.emails.send({
       from: EMAIL_FROM,
       to: params.email,
+      replyTo: EMAIL_REPLY_TO,
       subject,
       html,
     })

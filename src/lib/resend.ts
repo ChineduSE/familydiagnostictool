@@ -12,3 +12,8 @@ export function createResend(): Resend | null {
 // Verified sender address. Override via EMAIL_FROM once the domain is set up.
 export const EMAIL_FROM =
   process.env.EMAIL_FROM ?? 'Ibironke Semowo <hello@ibironkeosemowo.com>'
+
+// Where parent replies should land (e.g. Ibironke's Gmail or business inbox).
+// When unset, replies fall back to EMAIL_FROM. Set EMAIL_REPLY_TO so replies go
+// straight to a real monitored inbox without needing Resend inbound receiving.
+export const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || undefined
