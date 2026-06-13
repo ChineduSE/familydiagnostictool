@@ -22,15 +22,9 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
   const { data: broadcast } = await supabase.from('broadcasts').select('*').eq('id', id).maybeSingle()
   if (!broadcast) return NextResponse.json({ error: 'Broadcast not found' }, { status: 404 })
 
-  const { data: settings } = await supabase.from('settings').select('*').eq('id', 1).maybeSingle()
-  if (!settings) return NextResponse.json({ error: 'Settings not found' }, { status: 500 })
-
-  const resolved = resolveBroadcastTarget(
-    (broadcast as Broadcast).audience_type as BroadcastAudience,
-    settings as Settings
-  )
-  if (!resolved.ok) return NextResponse.json({ error: resolved.error }, { status: 400 })
-
+  // Sync first: this auto-creates the Resend audience (saving its id to settings)
+  // and refreshes each contact's score_band. Must run BEFORE resolving the target
+  // so an "all" send can find the freshly-created audience id.
   try {
     await syncConsentedContacts(supabase, resend)
   } catch (err) {
@@ -39,6 +33,15 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
       { status: 502 }
     )
   }
+
+  const { data: settings } = await supabase.from('settings').select('*').eq('id', 1).maybeSingle()
+  if (!settings) return NextResponse.json({ error: 'Settings not found' }, { status: 500 })
+
+  const resolved = resolveBroadcastTarget(
+    (broadcast as Broadcast).audience_type as BroadcastAudience,
+    settings as Settings
+  )
+  if (!resolved.ok) return NextResponse.json({ error: resolved.error }, { status: 400 })
 
   const result = await sendBroadcastNow({
     supabase,

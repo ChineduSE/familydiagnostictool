@@ -33,7 +33,10 @@ export default async function ConfirmBroadcastPage({ params }: { params: Promise
   const settings = (settingsRow ?? {}) as Settings
   const audience = broadcast.audience_type as BroadcastAudience
   const recipientCount = recipientCountFor(audience, counts)
+  // "All" never needs pre-configuration — the audience auto-creates on the first
+  // send. Only a band needs its segment id to exist, so block just that case.
   const resolved = resolveBroadcastTarget(audience, settings)
+  const disabledReason = audience === 'all' ? undefined : resolved.ok ? undefined : resolved.error
 
   return (
     <div className="max-w-3xl">
@@ -63,7 +66,7 @@ export default async function ConfirmBroadcastPage({ params }: { params: Promise
         <BroadcastConfirmActions
           broadcastId={id}
           recipientCount={recipientCount}
-          disabledReason={resolved.ok ? undefined : resolved.error}
+          disabledReason={disabledReason}
         />
       </div>
     </div>
