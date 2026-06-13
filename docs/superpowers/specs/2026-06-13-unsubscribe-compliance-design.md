@@ -25,12 +25,37 @@ are accurate and Ibironke can see who opted out.
 - Stop re-subscribing: update path omits `unsubscribed`; create keeps `unsubscribed: false`.
 - `reconcileUnsubscribes`: pull Resend audience opt-outs into `contacts.unsubscribed_at` at send time.
 - Small "Unsubscribed" badge on the admin respondent detail page.
+- **Custom unsubscribe for the results email** (added per product decision — because
+  the opt-out model auto-enrols parents, the first/transactional email should also
+  offer an opt-out): a signed unsubscribe link in the results email footer → a
+  public confirmation page → marks the contact unsubscribed in our DB and Resend.
 
 **Out (explicitly):**
 - Real-time webhook (`/api/webhooks/resend`) — deferred to Phase 6 (chosen: pull-at-send).
-- Custom/branded unsubscribe page — rely on Resend's compliant hosted page.
-- Unsubscribe link on the transactional results email — it's transactional (the
-  parent requested their own results), so it's exempt.
+- Changing the broadcast unsubscribe — broadcasts keep Resend's hosted unsubscribe link.
+
+## Custom unsubscribe for the results email (option 2)
+
+**Flow:** results email footer shows an "Unsubscribe" link carrying the parent's
+email + an HMAC-signed token → opens a public `/unsubscribe` page that **verifies
+the token and shows a confirmation** (chosen over instant one-click, so email
+security scanners can't auto-unsubscribe people) → on confirm, a POST handler
+marks the contact unsubscribed in our DB and (best-effort) in Resend → success page.
+
+**Security:** the link is signed with HMAC-SHA256 over the email using a server
+secret (`UNSUBSCRIBE_SECRET`, falling back to `SUPABASE_SERVICE_ROLE_KEY` so **no
+new env var is required**). Tampered or wrong-email links fail verification, so
+nobody can unsubscribe someone else. No new DB column — the token is stateless.
+
+**Components:**
+- `src/lib/unsubscribe-token.ts` (pure) — `signUnsubscribeToken`, `verifyUnsubscribeToken`, `buildUnsubscribeUrl`.
+- `src/lib/unsubscribe-contact.ts` — `unsubscribeContact(supabase, resend, email)`: set `unsubscribed_at` (if null) and best-effort `resend.contacts.update({ unsubscribed: true })` when the contact is already in the audience.
+- `src/app/unsubscribe/page.tsx` (public) — verify token; show confirmation, success (`?done=1`), or invalid-link states.
+- `src/app/api/unsubscribe/route.ts` (public POST) — verify token, `unsubscribeContact`, redirect to the success page.
+- Modify `BaseEmail` (+ `ResultsEmail`, `sendResultsEmail`) to render the unsubscribe footer link from a `buildUnsubscribeUrl(email)`.
+
+Both `/unsubscribe` and `/api/unsubscribe` sit outside the `/admin` middleware
+matcher, so they're publicly reachable by recipients.
 
 ## Verified platform facts (installed `resend@6.12.4`)
 
@@ -95,8 +120,13 @@ excluded from this very send's sync — we never re-touch them in Resend.
   not unsubscribed is left untouched.
 - Existing sync tests updated for the new fake (`contacts.list`) and the removed
   `unsubscribed: false` on update.
+- `unsubscribe-token`: sign→verify round-trip passes; a tampered token fails; a
+  token signed for one email fails for another.
+- `unsubscribe-contact`: sets `unsubscribed_at` for the email; best-effort Resend
+  update is attempted only when the contact has a `resend_contact_id` + audience id.
 
 ## Out of scope / non-goals
 
-Open/click tracking, the webhook endpoint, a branded unsubscribe page, resubscribe
-UI, and pagination of very large audiences. All deferred or rejected per decisions above.
+Open/click tracking, the webhook endpoint, a resubscribe UI, and pagination of very
+large audiences. Broadcasts keep Resend's hosted unsubscribe (we are not replacing
+it). All deferred or rejected per decisions above.

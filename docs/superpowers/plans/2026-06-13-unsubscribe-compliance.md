@@ -14,12 +14,19 @@
 
 ## File Structure
 
-**Modify:**
-- `src/lib/resend-audience.ts` — update path drops `unsubscribed: false`; add + wire `reconcileUnsubscribes`.
-- `src/lib/resend-audience.test.ts` — add `contacts.list` to the fake; tests for no-resubscribe and reconciliation.
-- `src/app/admin/(panel)/respondents/[id]/page.tsx` — look up the contact's `unsubscribed_at` and show an "Unsubscribed" badge.
+**Part A — pull-at-send + badge (Tasks 1-3):**
+- Modify `src/lib/resend-audience.ts` — update path drops `unsubscribed: false`; add + wire `reconcileUnsubscribes`.
+- Modify `src/lib/resend-audience.test.ts` — add `contacts.list` to the fake; tests for no-resubscribe and reconciliation.
+- Modify `src/app/admin/(panel)/respondents/[id]/page.tsx` — look up the contact's `unsubscribed_at` and show an "Unsubscribed" badge.
 
-No new files, no DB migration (uses existing `contacts.unsubscribed_at`).
+**Part B — custom unsubscribe for the results email (Tasks 4-7):**
+- Create `src/lib/unsubscribe-token.ts` (+ test) — HMAC sign/verify + `buildUnsubscribeUrl`.
+- Create `src/lib/unsubscribe-contact.ts` (+ test) — `unsubscribeContact` (DB + best-effort Resend).
+- Create `src/app/unsubscribe/page.tsx` — public confirmation/success/invalid page.
+- Create `src/app/api/unsubscribe/route.ts` — public POST handler performing the opt-out.
+- Modify `src/emails/BaseEmail.tsx`, `src/emails/ResultsEmail.tsx`, `src/lib/send-results-email.ts` — render the unsubscribe footer link.
+
+No DB migration (uses existing `contacts.unsubscribed_at`). No new required env var (signing secret falls back to `SUPABASE_SERVICE_ROLE_KEY`).
 
 ---
 
@@ -316,35 +323,464 @@ git commit -m "feat: show Unsubscribed badge on respondent detail"
 
 ---
 
-## Task 4: Full verification
+## Task 4: `unsubscribe-token.ts` (signed link) — TDD
+
+A stateless HMAC token so an unsubscribe link can't be forged for someone else.
+
+**Files:**
+- Create: `src/lib/unsubscribe-token.ts`
+- Test: `src/lib/unsubscribe-token.test.ts`
+
+- [ ] **Step 1: Write the failing test**
+
+`src/lib/unsubscribe-token.test.ts`:
+```ts
+import { describe, it, expect, beforeAll } from 'vitest'
+import { signUnsubscribeToken, verifyUnsubscribeToken, buildUnsubscribeUrl } from '@/lib/unsubscribe-token'
+
+beforeAll(() => {
+  process.env.UNSUBSCRIBE_SECRET = 'test-secret'
+  process.env.NEXT_PUBLIC_APP_URL = 'https://example.com'
+})
+
+describe('unsubscribe token', () => {
+  it('verifies a token it signed', () => {
+    const t = signUnsubscribeToken('a@x.com')
+    expect(verifyUnsubscribeToken('a@x.com', t)).toBe(true)
+  })
+
+  it('rejects a tampered token', () => {
+    const t = signUnsubscribeToken('a@x.com')
+    expect(verifyUnsubscribeToken('a@x.com', `${t}x`)).toBe(false)
+  })
+
+  it('rejects a token signed for a different email', () => {
+    const t = signUnsubscribeToken('a@x.com')
+    expect(verifyUnsubscribeToken('b@x.com', t)).toBe(false)
+  })
+
+  it('builds a url with the email and token as query params', () => {
+    const url = buildUnsubscribeUrl('a@x.com')
+    expect(url).toContain('https://example.com/unsubscribe?e=a%40x.com&t=')
+  })
+})
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `npx vitest run src/lib/unsubscribe-token.test.ts`
+Expected: FAIL — cannot resolve `@/lib/unsubscribe-token`.
+
+- [ ] **Step 3: Write the implementation**
+
+`src/lib/unsubscribe-token.ts`:
+```ts
+import { createHmac, timingSafeEqual } from 'node:crypto'
+
+// HMAC key: a dedicated secret if set, otherwise the service-role key (always
+// present server-side) so no new env var is required.
+function secret(): string {
+  return process.env.UNSUBSCRIBE_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+}
+
+export function signUnsubscribeToken(email: string): string {
+  return createHmac('sha256', secret()).update(email).digest('base64url')
+}
+
+export function verifyUnsubscribeToken(email: string, token: string): boolean {
+  const expected = Buffer.from(signUnsubscribeToken(email))
+  const given = Buffer.from(token)
+  return expected.length === given.length && timingSafeEqual(expected, given)
+}
+
+export function buildUnsubscribeUrl(email: string): string {
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  return `${base}/unsubscribe?e=${encodeURIComponent(email)}&t=${signUnsubscribeToken(email)}`
+}
+```
+
+- [ ] **Step 4: Run the test to verify it passes**
+
+Run: `npx vitest run src/lib/unsubscribe-token.test.ts`
+Expected: PASS (4 tests).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/lib/unsubscribe-token.ts src/lib/unsubscribe-token.test.ts
+git commit -m "feat: add signed unsubscribe token helpers"
+```
+(Append a trailing line: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`)
+
+---
+
+## Task 5: `unsubscribe-contact.ts` — TDD with mocks
+
+Marks a contact unsubscribed in our DB (idempotent), and best-effort in Resend so
+broadcasts also skip them. Never throws on the Resend side (DB is source of truth).
+
+**Files:**
+- Create: `src/lib/unsubscribe-contact.ts`
+- Test: `src/lib/unsubscribe-contact.test.ts`
+
+- [ ] **Step 1: Write the failing test**
+
+`src/lib/unsubscribe-contact.test.ts`:
+```ts
+/* eslint-disable @typescript-eslint/no-explicit-any -- intentionally loose test doubles */
+import { describe, it, expect, vi } from 'vitest'
+import { unsubscribeContact } from '@/lib/unsubscribe-contact'
+
+function fakeSupabase({ resendContactId = null as string | null, audienceId = null as string | null } = {}) {
+  const dbUpdates: any[] = []
+  return {
+    dbUpdates,
+    from(table: string) {
+      if (table === 'settings') {
+        return { select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { resend_audience_id: audienceId } }) }) }) }
+      }
+      return {
+        update(patch: any) {
+          return { eq: () => ({ is: async () => { dbUpdates.push(patch); return { error: null } } }) }
+        },
+        select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { resend_contact_id: resendContactId } }) }) }),
+      }
+    },
+  } as any
+}
+
+describe('unsubscribeContact', () => {
+  it('marks the contact unsubscribed in the database', async () => {
+    const supabase = fakeSupabase()
+    const resend = { contacts: { update: vi.fn() } } as any
+    await unsubscribeContact(supabase, resend, 'a@x.com')
+    expect(supabase.dbUpdates[0]).toHaveProperty('unsubscribed_at')
+  })
+
+  it('also marks unsubscribed in Resend when the contact is already synced', async () => {
+    const supabase = fakeSupabase({ resendContactId: 'c1', audienceId: 'aud1' })
+    const resend = { contacts: { update: vi.fn(async () => ({ data: {}, error: null })) } } as any
+    await unsubscribeContact(supabase, resend, 'a@x.com')
+    expect(resend.contacts.update).toHaveBeenCalledWith(
+      expect.objectContaining({ audienceId: 'aud1', id: 'c1', unsubscribed: true })
+    )
+  })
+
+  it('skips Resend when the contact has not been synced yet', async () => {
+    const supabase = fakeSupabase({ resendContactId: null })
+    const resend = { contacts: { update: vi.fn() } } as any
+    await unsubscribeContact(supabase, resend, 'a@x.com')
+    expect(resend.contacts.update).not.toHaveBeenCalled()
+  })
+})
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `npx vitest run src/lib/unsubscribe-contact.test.ts`
+Expected: FAIL — cannot resolve `@/lib/unsubscribe-contact`.
+
+- [ ] **Step 3: Write the implementation**
+
+`src/lib/unsubscribe-contact.ts`:
+```ts
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Resend } from 'resend'
+
+// Marks a contact unsubscribed in our DB (only when not already, preserving the
+// first opt-out time) and best-effort in Resend so broadcasts skip them too.
+// Never throws on the Resend side — our DB is the source of truth and the sync
+// excludes unsubscribed rows regardless.
+export async function unsubscribeContact(
+  supabase: SupabaseClient,
+  resend: Resend,
+  email: string
+): Promise<void> {
+  await supabase
+    .from('contacts')
+    .update({ unsubscribed_at: new Date().toISOString() })
+    .eq('email', email)
+    .is('unsubscribed_at', null)
+
+  const { data: contact } = await supabase
+    .from('contacts')
+    .select('resend_contact_id')
+    .eq('email', email)
+    .maybeSingle()
+  if (!contact?.resend_contact_id) return
+
+  const { data: settings } = await supabase
+    .from('settings')
+    .select('resend_audience_id')
+    .eq('id', 1)
+    .maybeSingle()
+  if (!settings?.resend_audience_id) return
+
+  try {
+    await resend.contacts.update({
+      audienceId: settings.resend_audience_id,
+      id: contact.resend_contact_id,
+      unsubscribed: true,
+    })
+  } catch (err) {
+    console.error(`Failed to mark ${email} unsubscribed in Resend:`, err)
+  }
+}
+```
+
+- [ ] **Step 4: Run the test to verify it passes**
+
+Run: `npx vitest run src/lib/unsubscribe-contact.test.ts && npm run type-check && npm run lint`
+Expected: PASS (3 tests), no type/lint errors.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/lib/unsubscribe-contact.ts src/lib/unsubscribe-contact.test.ts
+git commit -m "feat: add unsubscribeContact (db + best-effort Resend)"
+```
+(Append a trailing line: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`)
+
+---
+
+## Task 6: Public `/unsubscribe` page + POST route
+
+The page (GET) verifies the token and shows a confirmation; the route (POST) does
+the opt-out and redirects to the success state. Both are public (outside the
+`/admin` middleware matcher).
+
+**Files:**
+- Create: `src/app/unsubscribe/page.tsx`
+- Create: `src/app/api/unsubscribe/route.ts`
+
+- [ ] **Step 1: Create the page**
+
+`src/app/unsubscribe/page.tsx`:
+```tsx
+import type { ReactNode } from 'react'
+import Link from 'next/link'
+import { verifyUnsubscribeToken } from '@/lib/unsubscribe-token'
+
+export const dynamic = 'force-dynamic'
+
+function Shell({ children }: { children: ReactNode }) {
+  return (
+    <main className="grid min-h-screen place-items-center bg-brand-offwhite px-5 py-8">
+      <section className="w-full max-w-[480px] rounded-[18px] bg-brand-white p-[30px] text-center shadow-[0_10px_32px_rgba(26,26,26,0.08)]">
+        {children}
+      </section>
+    </main>
+  )
+}
+
+export default async function UnsubscribePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ e?: string; t?: string; done?: string }>
+}) {
+  const { e = '', t = '', done } = await searchParams
+
+  if (done) {
+    return (
+      <Shell>
+        <h1 className="font-display text-[clamp(24px,5vw,32px)] leading-tight">You&apos;re unsubscribed</h1>
+        <p className="mt-3 text-brand-muted">You won&apos;t receive any more emails from us. You can retake the quiz anytime.</p>
+      </Shell>
+    )
+  }
+
+  if (!e || !t || !verifyUnsubscribeToken(e, t)) {
+    return (
+      <Shell>
+        <h1 className="font-display text-[clamp(24px,5vw,32px)] leading-tight">Link not valid</h1>
+        <p className="mt-3 text-brand-muted">This unsubscribe link is invalid or has expired.</p>
+      </Shell>
+    )
+  }
+
+  return (
+    <Shell>
+      <h1 className="font-display text-[clamp(24px,5vw,32px)] leading-tight">Unsubscribe?</h1>
+      <p className="mt-3 text-brand-muted">
+        Stop sending emails to <strong className="text-brand-black">{e}</strong>?
+      </p>
+      <form method="post" action="/api/unsubscribe" className="mt-6">
+        <input type="hidden" name="e" value={e} />
+        <input type="hidden" name="t" value={t} />
+        <button type="submit" className="btn-primary">Yes, unsubscribe me</button>
+      </form>
+      <Link href="/" className="mt-4 inline-block text-sm text-brand-muted underline">
+        No, keep me subscribed
+      </Link>
+    </Shell>
+  )
+}
+```
+
+- [ ] **Step 2: Create the POST route**
+
+`src/app/api/unsubscribe/route.ts`:
+```ts
+import { NextResponse } from 'next/server'
+import { verifyUnsubscribeToken } from '@/lib/unsubscribe-token'
+import { unsubscribeContact } from '@/lib/unsubscribe-contact'
+import { createSupabaseAdmin } from '@/lib/supabase-admin'
+import { createResend } from '@/lib/resend'
+
+export async function POST(request: Request) {
+  const form = await request.formData()
+  const email = String(form.get('e') ?? '')
+  const token = String(form.get('t') ?? '')
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin
+
+  if (!email || !token || !verifyUnsubscribeToken(email, token)) {
+    return NextResponse.redirect(`${appUrl}/unsubscribe`, { status: 303 })
+  }
+
+  const supabase = createSupabaseAdmin()
+  const resend = createResend()
+  if (supabase && resend) await unsubscribeContact(supabase, resend, email)
+
+  return NextResponse.redirect(`${appUrl}/unsubscribe?done=1`, { status: 303 })
+}
+```
+
+- [ ] **Step 3: Verify type-check + lint + build**
+
+Run: `npm run type-check && npm run lint && npm run build`
+Expected: no errors; the build lists `/unsubscribe` and `/api/unsubscribe` as routes.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add src/app/unsubscribe/page.tsx src/app/api/unsubscribe/route.ts
+git commit -m "feat: add public unsubscribe confirmation page and handler"
+```
+(Append a trailing line: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`)
+
+---
+
+## Task 7: Add the unsubscribe link to the results email
+
+**Files:**
+- Modify: `src/emails/BaseEmail.tsx`
+- Modify: `src/emails/ResultsEmail.tsx`
+- Modify: `src/lib/send-results-email.ts`
+
+- [ ] **Step 1: Add an `unsubscribeUrl` prop + footer link to `BaseEmail`**
+
+In `src/emails/BaseEmail.tsx`, change the props type:
+```tsx
+type BaseEmailProps = {
+  previewText: string
+  children: ReactNode
+  logoUrl?: string
+  unsubscribeUrl?: string
+}
+```
+Update the signature to destructure it:
+```tsx
+export function BaseEmail({ previewText, children, logoUrl, unsubscribeUrl }: BaseEmailProps) {
+```
+And replace the footer `Section` with one that adds the unsubscribe link when present:
+```tsx
+          <Hr style={{ borderColor: '#eee', margin: 0 }} />
+          <Section style={{ padding: '20px 40px' }}>
+            <Text style={{ fontSize: '12px', color: BRAND.muted, textAlign: 'center', margin: 0 }}>
+              © {new Date().getFullYear()} Ibironke O. Semowo · ibironkeosemowo.com
+            </Text>
+            {isSafeHttpUrl(unsubscribeUrl) && (
+              <Text style={{ fontSize: '12px', color: BRAND.muted, textAlign: 'center', margin: '8px 0 0' }}>
+                <a href={unsubscribeUrl} style={{ color: BRAND.muted, textDecoration: 'underline' }}>
+                  Unsubscribe
+                </a>
+              </Text>
+            )}
+          </Section>
+```
+
+- [ ] **Step 2: Thread the prop through `ResultsEmail`**
+
+In `src/emails/ResultsEmail.tsx`, add to `ResultsEmailProps`:
+```tsx
+  unsubscribeUrl?: string
+```
+Update the function signature destructure to include `unsubscribeUrl`:
+```tsx
+export function ResultsEmail({ firstName, score, scoreRange, ctaUrl, logoUrl, unsubscribeUrl }: ResultsEmailProps) {
+```
+And pass it to `BaseEmail`:
+```tsx
+    <BaseEmail previewText={previewText} logoUrl={logoUrl} unsubscribeUrl={unsubscribeUrl}>
+```
+
+- [ ] **Step 3: Build the url in `sendResultsEmail`**
+
+In `src/lib/send-results-email.ts`, add the import:
+```ts
+import { buildUnsubscribeUrl } from '@/lib/unsubscribe-token'
+```
+And pass `unsubscribeUrl` when creating the element:
+```ts
+    const html = await render(
+      createElement(ResultsEmail, {
+        firstName: params.firstName,
+        score: params.score,
+        scoreRange: params.scoreRange,
+        ctaUrl: params.ctaUrl,
+        logoUrl: params.logoUrl,
+        unsubscribeUrl: buildUnsubscribeUrl(params.email),
+      })
+    )
+```
+
+- [ ] **Step 4: Verify type-check + lint**
+
+Run: `npm run type-check && npm run lint`
+Expected: no errors.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/emails/BaseEmail.tsx src/emails/ResultsEmail.tsx src/lib/send-results-email.ts
+git commit -m "feat: add unsubscribe link to the results email footer"
+```
+(Append a trailing line: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`)
+
+---
+
+## Task 8: Full verification
 
 - [ ] **Step 1: Run the full gate**
 
 Run: `npm run test && npm run type-check && npm run lint && npm run build`
-Expected: all pass — Vitest green (existing suites + the new no-resubscribe and reconcile tests), no type/lint errors, build succeeds.
+Expected: all pass — Vitest green (existing suites + no-resubscribe, reconcile,
+unsubscribe-token, unsubscribe-contact), no type/lint errors, build succeeds and
+lists the new `/unsubscribe` + `/api/unsubscribe` routes.
 
-- [ ] **Step 2: Manual reasoning check (no live send required)**
+- [ ] **Step 2: Manual reasoning check**
 
-Confirm by reading the final `syncConsentedContacts`:
-- It calls `reconcileUnsubscribes` before loading contacts.
-- The update path no longer passes `unsubscribed`.
-- The create path still passes `unsubscribed: false`.
+Confirm by reading the code:
+- `syncConsentedContacts` calls `reconcileUnsubscribes` before loading contacts; the update path no longer passes `unsubscribed`; create still passes `unsubscribed: false`.
+- The results email footer renders an Unsubscribe link; `/unsubscribe` shows a confirmation before the POST performs the opt-out.
 
 - [ ] **Step 3: Update the project-status memory**
 
-In `C:\Users\Chinedu Nweke\.claude\projects\C--Users-Chinedu-Nweke-Downloads-familydiagnostictool\memory\project-status.md`, mark unsubscribe compliance done (local), note it's pull-at-send (no webhook yet), and that the real-time webhook + open/click tracking remain (Phase 6).
+In `C:\Users\Chinedu Nweke\.claude\projects\C--Users-Chinedu-Nweke-Downloads-familydiagnostictool\memory\project-status.md`, mark unsubscribe compliance done (local): pull-at-send reconciliation + no-resubscribe fix + admin badge + a signed custom unsubscribe link on the results email (confirmation page). Note the real-time webhook + open/click tracking remain (Phase 6).
 
 - [ ] **Step 4: Stop and report before pushing**
 
 Per the project workflow (commit to main locally, ask before pushing), do NOT push.
-Summarize what changed and the verification results, and ask for the go-ahead to push.
+Summarize what changed and the verification results, note that a real opt-out can
+be tested end-to-end via the results email's link, and ask for the go-ahead to push.
 
 ---
 
 ## Self-Review notes
 
-- **Spec coverage:** no-resubscribe on update (T1), create keeps subscribed (T1, unchanged line), `reconcileUnsubscribes` + send-flow ordering (T2), admin badge (T3), tests for both behaviors (T1/T2), verification (T4). All covered.
-- **No webhook / no custom unsubscribe page / no results-email unsubscribe:** correctly out of scope.
-- **Type consistency:** `reconcileUnsubscribes(supabase, resend, audienceId)` signature matches its call in `syncConsentedContacts`; the SDK `Contact` list item exposes `email`/`unsubscribed`; `contacts.list` added to the fake matches the real call shape.
-- **Idempotency:** reconcile updates only where `unsubscribed_at IS NULL`, preserving the first opt-out time and making repeated sends safe.
-- **No DB migration:** uses the existing `contacts.unsubscribed_at` column.
+- **Spec coverage:** no-resubscribe on update (T1), create keeps subscribed (T1), `reconcileUnsubscribes` + send-flow ordering (T2), admin badge (T3), signed token (T4), `unsubscribeContact` DB+Resend (T5), public confirmation page + POST handler (T6), results-email footer link (T7), verification (T8). All covered.
+- **Out of scope correctly absent:** webhook/tracking, resubscribe UI, list pagination, and any change to the broadcast (Resend-hosted) unsubscribe.
+- **Type consistency:** `reconcileUnsubscribes(supabase, resend, audienceId)` matches its call site; SDK `Contact` exposes `email`/`unsubscribed`; `unsubscribeContact(supabase, resend, email)` matches the route call; `signUnsubscribeToken`/`verifyUnsubscribeToken`/`buildUnsubscribeUrl` names are consistent across token lib, page, route, and email; `unsubscribeUrl` prop threads BaseEmail ← ResultsEmail ← sendResultsEmail.
+- **Idempotency:** reconcile and `unsubscribeContact` both update only where `unsubscribed_at IS NULL`, preserving the first opt-out time.
+- **Security:** unsubscribe link is HMAC-signed (no forging others' opt-outs); confirmation page (not one-click) avoids scanner auto-unsubscribes; page + route are public (outside `/admin` matcher) by design.
+- **No DB migration / no required new env var:** uses existing `contacts.unsubscribed_at`; signing secret falls back to `SUPABASE_SERVICE_ROLE_KEY`.
