@@ -179,18 +179,28 @@ export function BroadcastComposer({ broadcast }: BroadcastComposerProps) {
           <button type="button" className="btn-primary" onClick={saveDraft} disabled={saving}>
             {saving ? 'Saving…' : 'Save draft'}
           </button>
+          {broadcast ? (
+            <button
+              type="button"
+              onClick={() => router.push(`/admin/broadcasts/${broadcast.id}/confirm`)}
+              className="rounded-full border border-brand-black px-5 py-3 text-sm font-bold text-brand-black transition-colors hover:bg-brand-black hover:text-brand-white"
+            >
+              Send now
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled
+              title="Save the draft first, then you can send it"
+              className="cursor-not-allowed rounded-full border border-black/20 px-5 py-3 text-sm font-bold text-brand-muted opacity-60"
+            >
+              Send now
+            </button>
+          )}
           <button
             type="button"
             disabled
-            title="Live sending activates in Phase 7"
-            className="cursor-not-allowed rounded-full border border-black/20 px-5 py-3 text-sm font-bold text-brand-muted opacity-60"
-          >
-            Send now
-          </button>
-          <button
-            type="button"
-            disabled
-            title="Live sending activates in Phase 7"
+            title="Scheduling activates in a later update"
             className="cursor-not-allowed rounded-full border border-black/20 px-5 py-3 text-sm font-bold text-brand-muted opacity-60"
           >
             Schedule
@@ -201,7 +211,9 @@ export function BroadcastComposer({ broadcast }: BroadcastComposerProps) {
             </button>
           )}
         </div>
-        <p className="text-xs text-brand-muted">Live sending and scheduling activate in Phase 7.</p>
+        <p className="text-xs text-brand-muted">
+          Save your draft, then use “Send now” to review and send. Scheduling comes next.
+        </p>
         {toast && (
           <div className="rounded-lg bg-brand-black px-4 py-2 text-sm text-brand-white">{toast}</div>
         )}

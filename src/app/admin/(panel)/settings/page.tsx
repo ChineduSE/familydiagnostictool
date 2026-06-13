@@ -11,12 +11,19 @@ export default function SettingsPage() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [logoPath, setLogoPath] = useState<string | null>(null)
   const [savingWhatsApp, setSavingWhatsApp] = useState(false)
+  const [audienceId, setAudienceId] = useState('')
+  const [segRisk, setSegRisk] = useState('')
+  const [segStrain, setSegStrain] = useState('')
+  const [segStrong, setSegStrong] = useState('')
+  const [savingSegments, setSavingSegments] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
     supabase
       .from('settings')
-      .select('whatsapp_number, whatsapp_message_template, logo_url, logo_storage_path')
+      .select(
+        'whatsapp_number, whatsapp_message_template, logo_url, logo_storage_path, resend_audience_id, segment_at_risk_id, segment_under_strain_id, segment_strong_id'
+      )
       .eq('id', 1)
       .maybeSingle()
       .then(({ data }) => {
@@ -25,6 +32,10 @@ export default function SettingsPage() {
           setTemplate(data.whatsapp_message_template ?? '')
           setLogoUrl(data.logo_url)
           setLogoPath(data.logo_storage_path)
+          setAudienceId(data.resend_audience_id ?? '')
+          setSegRisk(data.segment_at_risk_id ?? '')
+          setSegStrain(data.segment_under_strain_id ?? '')
+          setSegStrong(data.segment_strong_id ?? '')
         }
         setLoading(false)
       })
@@ -46,6 +57,21 @@ export default function SettingsPage() {
       .eq('id', 1)
     setSavingWhatsApp(false)
     showToast(error ? 'Could not save — please try again' : 'WhatsApp settings saved')
+  }
+
+  async function saveSegments() {
+    setSavingSegments(true)
+    const { error } = await supabase
+      .from('settings')
+      .update({
+        resend_audience_id: audienceId.trim() || null,
+        segment_at_risk_id: segRisk.trim() || null,
+        segment_under_strain_id: segStrain.trim() || null,
+        segment_strong_id: segStrong.trim() || null,
+      })
+      .eq('id', 1)
+    setSavingSegments(false)
+    showToast(error ? 'Could not save — please try again' : 'Broadcast audience settings saved')
   }
 
   async function onLogoChange(event: ChangeEvent<HTMLInputElement>) {
@@ -183,6 +209,33 @@ export default function SettingsPage() {
             <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={onLogoChange} />
           </label>
         )}
+      </section>
+
+      {/* Broadcast audience (Resend) */}
+      <section className="mt-6 rounded-xl border border-black/10 bg-brand-white p-6">
+        <h2 className="font-display text-lg">Broadcast audience (Resend)</h2>
+        <p className="mt-1 text-sm text-brand-muted">
+          Sending to a single score band needs a Resend segment for that band. Create the segments
+          once in the Resend dashboard (filtering the <code className="rounded bg-black/5 px-1">score_band</code>{' '}
+          property), then paste their ids here. The audience id auto-fills the first time you send.
+        </p>
+
+        <label className="mt-4 block text-sm font-bold" htmlFor="audience-id">Resend audience id</label>
+        <input id="audience-id" className="field-input mt-1" value={audienceId}
+          onChange={(e) => setAudienceId(e.target.value)} placeholder="aud_… (auto-filled on first send)" />
+
+        <label className="mt-4 block text-sm font-bold" htmlFor="seg-risk">Segment id — At risk</label>
+        <input id="seg-risk" className="field-input mt-1" value={segRisk} onChange={(e) => setSegRisk(e.target.value)} placeholder="seg_…" />
+
+        <label className="mt-4 block text-sm font-bold" htmlFor="seg-strain">Segment id — Under strain</label>
+        <input id="seg-strain" className="field-input mt-1" value={segStrain} onChange={(e) => setSegStrain(e.target.value)} placeholder="seg_…" />
+
+        <label className="mt-4 block text-sm font-bold" htmlFor="seg-strong">Segment id — Strong</label>
+        <input id="seg-strong" className="field-input mt-1" value={segStrong} onChange={(e) => setSegStrong(e.target.value)} placeholder="seg_…" />
+
+        <button className="btn-primary mt-4" type="button" onClick={saveSegments} disabled={savingSegments}>
+          {savingSegments ? 'Saving…' : 'Save'}
+        </button>
       </section>
 
       {toast && (
