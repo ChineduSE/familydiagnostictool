@@ -1,6 +1,23 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Resend } from 'resend'
 
+const SCORE_BAND_PROPERTY = 'score_band'
+
+// Resend rejects setting a contact property that isn't defined on the account
+// ("One or more properties do not exist", 422). Define score_band once,
+// idempotently, before syncing contacts that carry it — otherwise every contact
+// create fails and the audience ends up empty.
+export async function ensureScoreBandProperty(resend: Resend): Promise<void> {
+  const { data } = await resend.contactProperties.list()
+  if (data?.data?.some((property) => property.key === SCORE_BAND_PROPERTY)) return
+
+  const { error } = await resend.contactProperties.create({
+    key: SCORE_BAND_PROPERTY,
+    type: 'string',
+  })
+  if (error) throw new Error(`Failed to create the score_band contact property: ${error.message}`)
+}
+
 // Ensures a Resend audience exists, returning its id. Creates one (named for the
 // project) and persists the id to settings the first time.
 export async function ensureAudience(
@@ -31,6 +48,7 @@ export async function syncConsentedContacts(
   resend: Resend
 ): Promise<SyncResult> {
   const audienceId = await ensureAudience(supabase, resend)
+  await ensureScoreBandProperty(resend)
 
   const { data: contacts, error } = await supabase
     .from('contacts')

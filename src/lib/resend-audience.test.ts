@@ -36,6 +36,10 @@ function fakeSupabase(contacts: any[], audienceId: string | null) {
 function fakeResend() {
   return {
     audiences: { create: vi.fn(async () => ({ data: { id: 'aud_new' }, error: null })) },
+    contactProperties: {
+      list: vi.fn(async () => ({ data: { data: [] }, error: null })),
+      create: vi.fn(async () => ({ data: { id: 'prop_new' }, error: null })),
+    },
     contacts: {
       create: vi.fn(async () => ({ data: { id: 'c_new' }, error: null })),
       update: vi.fn(async () => ({ data: { id: 'c_upd' }, error: null })),
@@ -50,6 +54,23 @@ describe('syncConsentedContacts', () => {
     await syncConsentedContacts(supabase, resend)
     expect(resend.audiences.create).toHaveBeenCalledOnce()
     expect(supabase.settingsUpdates[0]).toMatchObject({ resend_audience_id: 'aud_new' })
+  })
+
+  it('defines the score_band property before syncing when it does not exist', async () => {
+    const supabase = fakeSupabase([], 'aud_1')
+    const resend = fakeResend()
+    await syncConsentedContacts(supabase, resend)
+    expect(resend.contactProperties.create).toHaveBeenCalledWith(
+      expect.objectContaining({ key: 'score_band', type: 'string' })
+    )
+  })
+
+  it('does not redefine score_band when it already exists', async () => {
+    const supabase = fakeSupabase([], 'aud_1')
+    const resend = fakeResend()
+    resend.contactProperties.list.mockResolvedValueOnce({ data: { data: [{ key: 'score_band' }] }, error: null })
+    await syncConsentedContacts(supabase, resend)
+    expect(resend.contactProperties.create).not.toHaveBeenCalled()
   })
 
   it('creates a Resend contact for an unsynced row and stores the id', async () => {
