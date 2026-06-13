@@ -31,7 +31,7 @@ const FRAME_STYLES = `
   .subject.empty{color:#9a948b;font-weight:500}
   .from{margin-top:6px;font-size:12px;color:#706c65}
   .from .avatar{display:inline-block;width:18px;height:18px;border-radius:50%;background:#F0C040;color:#1A1A1A;text-align:center;line-height:18px;font-weight:700;font-size:11px;margin-right:6px;vertical-align:middle}
-  .body{background:#fff;padding:24px 20px}
+  .body{padding:0}
   .body p{margin:0 0 12px}
   .body ul,.body ol{margin:0 0 12px;padding-left:24px}
   .body ul{list-style:disc}
