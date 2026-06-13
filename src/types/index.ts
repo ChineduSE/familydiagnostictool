@@ -98,6 +98,10 @@ export type Settings = {
   whatsapp_cta_url: string | null
   logo_url: string | null
   logo_storage_path: string | null
+  resend_audience_id: string | null
+  segment_at_risk_id: string | null
+  segment_under_strain_id: string | null
+  segment_strong_id: string | null
   updated_at: string
 }
 
