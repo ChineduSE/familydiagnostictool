@@ -46,6 +46,8 @@ export async function syncConsentedContacts(
     const properties = { score_band: contact.latest_score_range ?? '' }
     try {
       if (contact.resend_contact_id) {
+        // Already in the audience: refresh name/band/unsubscribed in Resend.
+        // No Supabase write-back is needed — resend_contact_id is already stored.
         await resend.contacts.update({
           audienceId,
           id: contact.resend_contact_id,
@@ -65,7 +67,10 @@ export async function syncConsentedContacts(
         await supabase.from('contacts').update({ resend_contact_id: data.id }).eq('id', contact.id)
       }
       synced++
-    } catch {
+    } catch (err) {
+      // Stay resilient: one bad contact must not abort the whole sync. Log which
+      // contact and why so failures are diagnosable in production.
+      console.error(`Failed to sync contact ${contact.id} to Resend audience:`, err)
       failed++
     }
   }

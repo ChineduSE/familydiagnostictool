@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- intentionally loose test doubles for the Supabase/Resend clients */
 import { describe, it, expect, vi } from 'vitest'
 import { syncConsentedContacts } from '@/lib/resend-audience'
 
@@ -81,5 +82,21 @@ describe('syncConsentedContacts', () => {
       expect.objectContaining({ audienceId: 'aud_1', id: 'c_existing', properties: { score_band: 'strong' } })
     )
     expect(resend.contacts.create).not.toHaveBeenCalled()
+  })
+
+  it('counts a failed contact without aborting the rest of the sync', async () => {
+    const contacts = [
+      { id: 'bad', email: 'bad@x.com', first_name: 'Bad', latest_score_range: 'at_risk', resend_contact_id: null, unsubscribed_at: null },
+      { id: 'good', email: 'good@x.com', first_name: 'Good', latest_score_range: 'strong', resend_contact_id: 'c_ok', unsubscribed_at: null },
+    ]
+    const supabase = fakeSupabase(contacts, 'aud_1')
+    const resend = fakeResend()
+    resend.contacts.create.mockRejectedValueOnce(new Error('boom'))
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const result = await syncConsentedContacts(supabase, resend)
+
+    expect(result).toEqual({ synced: 1, failed: 1 })
+    expect(resend.contacts.update).toHaveBeenCalledOnce() // the good one still ran
   })
 })
