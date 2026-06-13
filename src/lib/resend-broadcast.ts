@@ -57,7 +57,7 @@ export async function sendBroadcastNow(args: SendBroadcastArgs): Promise<SendRes
 
   if (error || !data) return { ok: false, error: error?.message ?? 'Failed to send broadcast' }
 
-  await supabase
+  const { error: updateError } = await supabase
     .from('broadcasts')
     .update({
       resend_broadcast_id: data.id,
@@ -66,12 +66,31 @@ export async function sendBroadcastNow(args: SendBroadcastArgs): Promise<SendRes
     })
     .eq('id', broadcast.id)
 
+  if (updateError) {
+    // The broadcast WAS sent via Resend, but recording it failed. Surface a
+    // distinct error so the operator investigates rather than blindly resending —
+    // a retry would pass the idempotency guard (status still 'draft') and send a
+    // duplicate to real parents. This cross-system gap can't be made atomic here.
+    console.error(
+      `Broadcast ${broadcast.id} sent (resend id ${data.id}) but status update failed:`,
+      updateError
+    )
+    return {
+      ok: false,
+      error: 'The broadcast was sent, but saving its status failed. Do not resend — verify it in Resend first.',
+    }
+  }
+
   return { ok: true, broadcastId: data.id }
 }
 
+// Test sends go through the transactional API and return an email id (not a
+// broadcast id), so they use a result type without the misleading broadcastId.
+type TestSendResult = { ok: true } | { ok: false; error: string }
+
 type TestSendArgs = { resend: Resend; broadcast: Broadcast; to: string; from: string; replyTo?: string }
 
-export async function sendTestToSelf(args: TestSendArgs): Promise<SendResult> {
+export async function sendTestToSelf(args: TestSendArgs): Promise<TestSendResult> {
   const { resend, broadcast, to, from, replyTo } = args
   const html =
     buildBroadcastHtml({
@@ -90,5 +109,5 @@ export async function sendTestToSelf(args: TestSendArgs): Promise<SendResult> {
   })
 
   if (error || !data) return { ok: false, error: error?.message ?? 'Failed to send test' }
-  return { ok: true, broadcastId: data.id }
+  return { ok: true }
 }

@@ -63,6 +63,25 @@ describe('sendBroadcastNow', () => {
     expect(result.ok).toBe(false)
     expect(resend.broadcasts.create).not.toHaveBeenCalled()
   })
+
+  it('does not claim success when recording the sent status fails', async () => {
+    const resend = fakeResend()
+    const supabase = {
+      from: () => ({ update: () => ({ eq: async () => ({ error: { message: 'db down' } }) }) }),
+    } as any
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const result = await sendBroadcastNow({
+      supabase,
+      resend,
+      broadcast: draft,
+      target: { audienceId: 'aud_1' },
+      from: 'X <hello@d.com>',
+    })
+
+    expect(resend.broadcasts.create).toHaveBeenCalledOnce() // it did send
+    expect(result.ok).toBe(false) // but it must not report success
+  })
 })
 
 describe('sendTestToSelf', () => {
