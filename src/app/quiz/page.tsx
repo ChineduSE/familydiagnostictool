@@ -10,6 +10,9 @@ import type { QuizSession } from '@/types'
 export default function QuizPage() {
   const router = useRouter()
   const [session, setSession] = useState<QuizSession | null>(null)
+  // True during the brief pause after a click, so the selected answer shows its
+  // fill before we advance — and so a second click can't register mid-transition.
+  const [advancing, setAdvancing] = useState(false)
 
   useEffect(() => {
     const storedSession = loadSession() ?? createSession()
@@ -23,22 +26,30 @@ export default function QuizPage() {
   const current = session.currentIndex + 1
 
   function selectAnswer(value: number) {
-    if (!session) return
+    if (!session || advancing) return
 
     const answers = [...session.answers]
     answers[session.currentIndex] = value
-    const isLastQuestion = session.currentIndex === QUESTIONS.length - 1
-    const nextSession = {
-      answers,
-      currentIndex: isLastQuestion ? session.currentIndex : session.currentIndex + 1,
-    }
+    const currentIndex = session.currentIndex
+    const isLastQuestion = currentIndex === QUESTIONS.length - 1
 
-    saveSession(nextSession)
-    setSession(nextSession)
+    // 1. Show the selection on the CURRENT question (gold fill) right away.
+    const answeredSession = { ...session, answers }
+    saveSession(answeredSession)
+    setSession(answeredSession)
+    setAdvancing(true)
 
+    // 2. After a short beat so the fill is visible, advance (or finish).
     window.setTimeout(() => {
-      if (isLastQuestion) router.push('/gate')
-    }, 240)
+      if (isLastQuestion) {
+        router.push('/gate')
+        return
+      }
+      const nextSession = { answers, currentIndex: currentIndex + 1 }
+      saveSession(nextSession)
+      setSession(nextSession)
+      setAdvancing(false)
+    }, 300)
   }
 
   function goBack() {
@@ -92,6 +103,7 @@ export default function QuizPage() {
                 )}
                 key={value}
                 type="button"
+                disabled={advancing}
                 onClick={() => selectAnswer(numericValue)}
               >
                 <span className="mb-2 block text-[19px] font-bold max-[620px]:mb-0">{value}</span>
