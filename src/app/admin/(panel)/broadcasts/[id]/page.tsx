@@ -1,16 +1,22 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { BroadcastComposer } from '@/components/admin/BroadcastComposer'
-import type { Broadcast } from '@/types'
+import { BroadcastDetail } from '@/components/admin/BroadcastDetail'
+import type { Broadcast, Settings } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
-export default async function EditBroadcastPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function BroadcastPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
   const { data } = await supabase.from('broadcasts').select('*').eq('id', id).maybeSingle()
   if (!data) notFound()
   const broadcast = data as Broadcast
+
+  if (broadcast.status !== 'draft') {
+    const { data: settings } = await supabase.from('settings').select('logo_url').eq('id', 1).maybeSingle()
+    return <BroadcastDetail broadcast={broadcast} logoUrl={(settings as Settings | null)?.logo_url ?? null} />
+  }
 
   return (
     <div>
