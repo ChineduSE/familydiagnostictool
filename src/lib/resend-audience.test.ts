@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- intentionally loose test doubles for the Supabase/Resend clients */
 import { describe, it, expect, vi } from 'vitest'
-import { syncConsentedContacts } from '@/lib/resend-audience'
+import { syncConsentedContacts, reconcileUnsubscribes } from '@/lib/resend-audience'
 
 // Minimal fake Supabase + Resend that record the calls we care about.
 function fakeSupabase(contacts: any[], audienceId: string | null) {
@@ -41,6 +41,7 @@ function fakeResend() {
       create: vi.fn(async () => ({ data: { id: 'prop_new' }, error: null })),
     },
     contacts: {
+      list: vi.fn(async () => ({ data: { data: [] }, error: null })),
       create: vi.fn(async () => ({ data: { id: 'c_new' }, error: null })),
       update: vi.fn(async () => ({ data: { id: 'c_upd' }, error: null })),
     },
@@ -130,5 +131,65 @@ describe('syncConsentedContacts', () => {
 
     expect(result).toEqual({ synced: 1, failed: 1 })
     expect(resend.contacts.update).toHaveBeenCalledOnce() // the good one still ran
+  })
+})
+
+describe('reconcileUnsubscribes', () => {
+  // A Supabase fake whose contacts.update(...).eq(...).is(...) chain is awaitable
+  // and records the patch + filters used.
+  function reconcileSupabase() {
+    const calls: any[] = []
+    return {
+      calls,
+      from() {
+        return {
+          update(patch: any) {
+            const record: any = { patch }
+            return {
+              eq(col: string, val: any) {
+                record.eq = { col, val }
+                return {
+                  is(col2: string, val2: any) {
+                    record.is = { col: col2, val: val2 }
+                    calls.push(record)
+                    return Promise.resolve({ error: null })
+                  },
+                }
+              },
+            }
+          },
+        }
+      },
+    } as any
+  }
+
+  it('marks an unsubscribed Resend contact as unsubscribed in the DB', async () => {
+    const supabase = reconcileSupabase()
+    const resend = {
+      contacts: {
+        list: vi.fn(async () => ({
+          data: { data: [{ email: 'gone@x.com', unsubscribed: true }, { email: 'stay@x.com', unsubscribed: false }] },
+          error: null,
+        })),
+      },
+    } as any
+
+    const count = await reconcileUnsubscribes(supabase, resend, 'aud_1')
+
+    expect(count).toBe(1)
+    expect(supabase.calls).toHaveLength(1)
+    expect(supabase.calls[0].patch).toHaveProperty('unsubscribed_at')
+    expect(supabase.calls[0].eq).toEqual({ col: 'email', val: 'gone@x.com' })
+    expect(supabase.calls[0].is).toEqual({ col: 'unsubscribed_at', val: null })
+  })
+
+  it('does nothing when no Resend contacts are unsubscribed', async () => {
+    const supabase = reconcileSupabase()
+    const resend = {
+      contacts: { list: vi.fn(async () => ({ data: { data: [{ email: 'a@x.com', unsubscribed: false }] }, error: null })) },
+    } as any
+    const count = await reconcileUnsubscribes(supabase, resend, 'aud_1')
+    expect(count).toBe(0)
+    expect(supabase.calls).toHaveLength(0)
   })
 })

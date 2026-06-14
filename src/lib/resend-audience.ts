@@ -39,6 +39,37 @@ export async function ensureAudience(
   return data.id
 }
 
+// Pulls Resend-side opt-outs back into our DB so admin counts stay accurate.
+// Lists the audience's Resend contacts and, for each unsubscribed one, sets
+// unsubscribed_at on the matching contact row by email — only when it's still
+// null, so the original opt-out time is preserved. Resilient: a failure on one
+// row is logged and skipped. Returns how many rows were newly marked.
+export async function reconcileUnsubscribes(
+  supabase: SupabaseClient,
+  resend: Resend,
+  audienceId: string
+): Promise<number> {
+  const { data, error } = await resend.contacts.list({ audienceId })
+  if (error || !data) return 0
+
+  let reconciled = 0
+  for (const contact of data.data ?? []) {
+    if (!contact.unsubscribed) continue
+    try {
+      const { error: updateError } = await supabase
+        .from('contacts')
+        .update({ unsubscribed_at: new Date().toISOString() })
+        .eq('email', contact.email)
+        .is('unsubscribed_at', null)
+      if (updateError) throw new Error(updateError.message)
+      reconciled++
+    } catch (err) {
+      console.error(`Failed to reconcile unsubscribe for ${contact.email}:`, err)
+    }
+  }
+  return reconciled
+}
+
 export type SyncResult = { synced: number; failed: number }
 
 // Upserts every non-unsubscribed contact into the Resend audience with their
@@ -49,6 +80,10 @@ export async function syncConsentedContacts(
 ): Promise<SyncResult> {
   const audienceId = await ensureAudience(supabase, resend)
   await ensureScoreBandProperty(resend)
+
+  // Pull Resend opt-outs into our DB BEFORE loading contacts, so anyone who
+  // unsubscribed is excluded from this send's sync (and never re-touched).
+  await reconcileUnsubscribes(supabase, resend, audienceId)
 
   const { data: contacts, error } = await supabase
     .from('contacts')
