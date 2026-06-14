@@ -57,6 +57,13 @@ export default async function RespondentDetailPage({
     .eq('assessment_id', id)
     .order('created_at', { ascending: false })
 
+  const { data: contact } = await supabase
+    .from('contacts')
+    .select('unsubscribed_at')
+    .eq('email', respondent.email)
+    .maybeSingle()
+  const isUnsubscribed = Boolean(contact?.unsubscribed_at)
+
   return (
     <div className="max-w-3xl">
       <BackLink />
@@ -75,6 +82,11 @@ export default async function RespondentDetailPage({
         <div className="mt-4 flex items-center gap-3">
           <span className="font-display text-2xl">{respondent.score} / 60</span>
           <RangeBadge range={range} />
+          {isUnsubscribed && (
+            <span className="inline-block whitespace-nowrap rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium text-brand-muted">
+              Unsubscribed
+            </span>
+          )}
         </div>
         <p className="mt-2 text-xs text-brand-muted">
           Submitted {formatDate(respondent.submitted_at)}
