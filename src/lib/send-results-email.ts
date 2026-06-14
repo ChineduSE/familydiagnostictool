@@ -3,6 +3,7 @@ import { render } from '@react-email/components'
 import { ResultsEmail } from '@/emails/ResultsEmail'
 import { EMAIL_COPY } from '@/lib/questions'
 import { createResend, EMAIL_FROM, EMAIL_REPLY_TO } from '@/lib/resend'
+import { buildUnsubscribeUrl } from '@/lib/unsubscribe-token'
 import type { ScoreRange } from '@/types'
 
 type SendResultsEmailParams = {
@@ -31,6 +32,7 @@ export async function sendResultsEmail(params: SendResultsEmailParams): Promise<
         scoreRange: params.scoreRange,
         ctaUrl: params.ctaUrl,
         logoUrl: params.logoUrl,
+        unsubscribeUrl: buildUnsubscribeUrl(params.email),
       })
     )
 

@@ -11,6 +11,7 @@ export type ResultsEmailProps = {
   scoreRange: ScoreRange
   ctaUrl?: string
   logoUrl?: string
+  unsubscribeUrl?: string
 }
 
 const paragraphStyle = {
@@ -36,14 +37,14 @@ function Paragraph({ text }: { text: string }) {
   )
 }
 
-export function ResultsEmail({ firstName, score, scoreRange, ctaUrl, logoUrl }: ResultsEmailProps) {
+export function ResultsEmail({ firstName, score, scoreRange, ctaUrl, logoUrl, unsubscribeUrl }: ResultsEmailProps) {
   const { subject, body } = EMAIL_COPY[scoreRange]
   const previewText = subject.replaceAll('[First name]', firstName)
   const resolved = body.replaceAll('[First name]', firstName).replaceAll('[SCORE]', String(score))
   const blocks = resolved.split('\n\n')
 
   return (
-    <BaseEmail previewText={previewText} logoUrl={logoUrl}>
+    <BaseEmail previewText={previewText} logoUrl={logoUrl} unsubscribeUrl={unsubscribeUrl}>
       {blocks.map((block, index) =>
         block.trim() === '[CTA BUTTON]' ? (
           <CtaButton key={index} label={CTA_LABEL} url={ctaUrl} />

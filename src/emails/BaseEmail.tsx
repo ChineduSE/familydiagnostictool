@@ -16,12 +16,13 @@ type BaseEmailProps = {
   previewText: string
   children: ReactNode
   logoUrl?: string
+  unsubscribeUrl?: string
 }
 
 // Shared shell for every outbound email: offwhite canvas, white 600px card,
 // optional black logo header, and the standard footer. Body content (and any
 // CTA button) is passed in as children so callers control placement.
-export function BaseEmail({ previewText, children, logoUrl }: BaseEmailProps) {
+export function BaseEmail({ previewText, children, logoUrl, unsubscribeUrl }: BaseEmailProps) {
   return (
     <Html>
       <Head />
@@ -41,6 +42,13 @@ export function BaseEmail({ previewText, children, logoUrl }: BaseEmailProps) {
             <Text style={{ fontSize: '12px', color: BRAND.muted, textAlign: 'center', margin: 0 }}>
               © {new Date().getFullYear()} Ibironke O. Semowo · ibironkeosemowo.com
             </Text>
+            {isSafeHttpUrl(unsubscribeUrl) && (
+              <Text style={{ fontSize: '12px', color: BRAND.muted, textAlign: 'center', margin: '8px 0 0' }}>
+                <a href={unsubscribeUrl} style={{ color: BRAND.muted, textDecoration: 'underline' }}>
+                  Unsubscribe
+                </a>
+              </Text>
+            )}
           </Section>
         </Container>
       </Body>
