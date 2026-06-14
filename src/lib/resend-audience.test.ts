@@ -105,6 +105,17 @@ describe('syncConsentedContacts', () => {
     expect(resend.contacts.create).not.toHaveBeenCalled()
   })
 
+  it('does not re-subscribe an existing contact on update', async () => {
+    const contacts = [
+      { id: 'r9', email: 'keep@x.com', first_name: 'Keep', latest_score_range: 'strong', resend_contact_id: 'c_keep', unsubscribed_at: null },
+    ]
+    const supabase = fakeSupabase(contacts, 'aud_1')
+    const resend = fakeResend()
+    await syncConsentedContacts(supabase, resend)
+    const updateArg = resend.contacts.update.mock.calls[0][0]
+    expect(updateArg.unsubscribed).toBeUndefined()
+  })
+
   it('counts a failed contact without aborting the rest of the sync', async () => {
     const contacts = [
       { id: 'bad', email: 'bad@x.com', first_name: 'Bad', latest_score_range: 'at_risk', resend_contact_id: null, unsubscribed_at: null },

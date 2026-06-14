@@ -64,13 +64,13 @@ export async function syncConsentedContacts(
     const properties = { score_band: contact.latest_score_range ?? '' }
     try {
       if (contact.resend_contact_id) {
-        // Already in the audience: refresh name/band/unsubscribed in Resend.
-        // No Supabase write-back is needed — resend_contact_id is already stored.
+        // Already in the audience: refresh name/band only. Do NOT send
+        // `unsubscribed` — that would overwrite a Resend opt-out and re-subscribe
+        // someone who unsubscribed. resend_contact_id is already stored.
         await resend.contacts.update({
           audienceId,
           id: contact.resend_contact_id,
           firstName: contact.first_name ?? undefined,
-          unsubscribed: false,
           properties,
         })
       } else {
