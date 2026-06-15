@@ -39,6 +39,7 @@ const FRAME_STYLES = `
   .body li{margin:3px 0}
   .body li p{margin:0}
   .body a{color:#1155cc;text-decoration:underline}
+  .body img{max-width:100%;height:auto}
   .body strong{font-weight:700}
   .body em{font-style:italic}
   .body h1,.body h2,.body h3{font-weight:700;margin:0 0 8px;line-height:1.3}

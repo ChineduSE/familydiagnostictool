@@ -74,6 +74,10 @@
   color: #1155cc;
   text-decoration: underline;
 }
+.rich-text img {
+  max-width: 100%;
+  height: auto;
+}
 .rich-text strong {
   font-weight: 700;
 }
