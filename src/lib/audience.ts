@@ -18,6 +18,13 @@ export const AUDIENCE_OPTIONS: { value: BroadcastAudience; label: string }[] = [
   { value: 'strong', label: 'Strong' },
 ]
 
+// Band targeting (sending to a single score band) needs Resend property-filtered
+// segments — a paid Resend feature, not available on the free tier. Off for now.
+// To re-enable: upgrade Resend, create the 3 band segments (filtering score_band)
+// in the dashboard, paste their ids into settings, then flip this to true. When
+// false, the composer offers "All respondents" only.
+export const BANDS_ENABLED = false
+
 export function recipientCountFor(audience: BroadcastAudience, counts: AudienceCounts): number {
   return counts[audience]
 }

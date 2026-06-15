@@ -1,6 +1,6 @@
 'use client'
 
-import { AUDIENCE_OPTIONS, recipientCountFor, type BroadcastAudience, type AudienceCounts } from '@/lib/audience'
+import { AUDIENCE_OPTIONS, BANDS_ENABLED, recipientCountFor, type BroadcastAudience, type AudienceCounts } from '@/lib/audience'
 import { cn } from '@/lib/utils'
 
 type AudienceSelectorProps = {
@@ -10,9 +10,11 @@ type AudienceSelectorProps = {
 }
 
 export function AudienceSelector({ value, onChange, counts }: AudienceSelectorProps) {
+  const options = BANDS_ENABLED ? AUDIENCE_OPTIONS : AUDIENCE_OPTIONS.filter((o) => o.value === 'all')
+
   return (
     <div className="grid gap-2 sm:grid-cols-2">
-      {AUDIENCE_OPTIONS.map((option) => {
+      {options.map((option) => {
         const selected = value === option.value
         const count = counts ? recipientCountFor(option.value, counts) : null
         return (
