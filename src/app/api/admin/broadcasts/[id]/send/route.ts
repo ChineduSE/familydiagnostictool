@@ -50,6 +50,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     target: resolved.target,
     from: EMAIL_FROM,
     replyTo: EMAIL_REPLY_TO,
+    logoUrl: (broadcast as Broadcast).include_logo ? (settings as Settings).logo_url : null,
   })
 
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 502 })

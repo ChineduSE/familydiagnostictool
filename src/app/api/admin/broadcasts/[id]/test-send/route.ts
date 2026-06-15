@@ -20,12 +20,15 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
   const { data: broadcast } = await supabase.from('broadcasts').select('*').eq('id', id).maybeSingle()
   if (!broadcast) return NextResponse.json({ error: 'Broadcast not found' }, { status: 404 })
 
+  const { data: settings } = await supabase.from('settings').select('logo_url').eq('id', 1).maybeSingle()
+
   const result = await sendTestToSelf({
     resend,
     broadcast: broadcast as Broadcast,
     to: auth.user.email,
     from: EMAIL_FROM,
     replyTo: EMAIL_REPLY_TO,
+    logoUrl: (broadcast as Broadcast).include_logo ? settings?.logo_url ?? null : null,
   })
 
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 502 })

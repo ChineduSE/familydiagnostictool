@@ -18,10 +18,11 @@ type SendBroadcastArgs = {
   target: ResendTarget
   from: string
   replyTo?: string
+  logoUrl?: string | null
 }
 
 export async function sendBroadcastNow(args: SendBroadcastArgs): Promise<SendResult> {
-  const { supabase, resend, broadcast, target, from, replyTo } = args
+  const { supabase, resend, broadcast, target, from, replyTo, logoUrl } = args
 
   if (broadcast.status === 'sent' || broadcast.resend_broadcast_id) {
     return { ok: false, error: 'This broadcast has already been sent.' }
@@ -33,7 +34,7 @@ export async function sendBroadcastNow(args: SendBroadcastArgs): Promise<SendRes
       bodyHtml,
       ctaLabel: broadcast.cta_label,
       ctaUrl: broadcast.cta_url,
-      logoUrl: null,
+      logoUrl: logoUrl ?? null,
     }) + UNSUBSCRIBE_FOOTER
 
   // CreateBroadcastOptions requires RequireAtLeastOne<SegmentOptions> (audienceId | segmentId)
@@ -88,16 +89,16 @@ export async function sendBroadcastNow(args: SendBroadcastArgs): Promise<SendRes
 // broadcast id), so they use a result type without the misleading broadcastId.
 type TestSendResult = { ok: true } | { ok: false; error: string }
 
-type TestSendArgs = { resend: Resend; broadcast: Broadcast; to: string; from: string; replyTo?: string }
+type TestSendArgs = { resend: Resend; broadcast: Broadcast; to: string; from: string; replyTo?: string; logoUrl?: string | null }
 
 export async function sendTestToSelf(args: TestSendArgs): Promise<TestSendResult> {
-  const { resend, broadcast, to, from, replyTo } = args
+  const { resend, broadcast, to, from, replyTo, logoUrl } = args
   const html =
     buildBroadcastHtml({
       bodyHtml: toSampleText(broadcast.body_html, ''),
       ctaLabel: broadcast.cta_label,
       ctaUrl: broadcast.cta_url,
-      logoUrl: null,
+      logoUrl: logoUrl ?? null,
     }) + '<div style="margin-top:28px;font-size:12px;color:#9a948b;text-align:center;">Unsubscribe (test)</div>'
 
   const { data, error } = await resend.emails.send({

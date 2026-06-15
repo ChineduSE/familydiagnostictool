@@ -50,6 +50,22 @@ describe('sendBroadcastNow', () => {
     expect(updates[0]).toMatchObject({ resend_broadcast_id: 'bc_1', status: 'sent' })
   })
 
+  it('includes the logo image when a logoUrl is provided', async () => {
+    const resend = fakeResend()
+    const supabase = { from: () => ({ update: () => ({ eq: async () => ({ error: null }) }) }) } as any
+    await sendBroadcastNow({
+      supabase,
+      resend,
+      broadcast: draft,
+      target: { audienceId: 'aud_1' },
+      from: 'X <hello@d.com>',
+      logoUrl: 'https://cdn/logo.png',
+    })
+    const arg = resend.broadcasts.create.mock.calls[0][0]
+    expect(arg.html).toContain('<img')
+    expect(arg.html).toContain('https://cdn/logo.png')
+  })
+
   it('refuses to resend an already-sent broadcast', async () => {
     const resend = fakeResend()
     const supabase = { from: () => ({ update: () => ({ eq: async () => ({ error: null }) }) }) } as any
