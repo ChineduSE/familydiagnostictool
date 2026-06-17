@@ -4,52 +4,52 @@ export const QUESTIONS = [
   {
     id: 'Q1',
     section: 'Communication patterns',
-    text: "When your child comes to you upset or frustrated, do you stop what you're doing to listen — without immediately offering advice or solutions?",
+    text: "When your child comes to you upset or frustrated, do you stop what you're doing to listen, without immediately offering advice or solutions?",
   },
   {
     id: 'Q2',
     section: 'Communication patterns',
-    text: "In a typical week, how often do you and your child have a real conversation — not about schedules, homework, or chores, but about how they're actually feeling?",
+    text: "In a typical week, how often do you and your child have a real conversation, not about schedules, homework, or chores, but about how they're actually feeling?",
   },
   {
     id: 'Q3',
     section: 'Emotional availability',
-    text: "When your child is having a hard day, can they show you they're struggling — without worrying about your reaction or being told to \"toughen up\"?",
+    text: "When your child is having a hard day, can they show you they're struggling, without worrying about your reaction or being told to \"toughen up\"?",
   },
   {
     id: 'Q4',
     section: 'Emotional availability',
-    text: 'After a difficult moment between you and your child — an argument, a punishment, a misunderstanding — do you find a way to reconnect before the day ends?',
+    text: 'After a difficult moment between you and your child (an argument, a punishment, a misunderstanding), do you find a way to reconnect before the day ends?',
   },
   {
     id: 'Q5',
     section: 'Device habits',
-    text: "During family meals or dedicated family time, are screens — yours and your child's — put away without negotiation?",
+    text: "During family meals or dedicated family time, are screens (yours and your child's) put away without negotiation?",
   },
   {
     id: 'Q6',
     section: 'Device habits',
-    text: "When your child reaches for a screen, do they usually do so because they're genuinely bored or seeking entertainment — rather than avoiding you or an uncomfortable feeling?",
+    text: "When your child reaches for a screen, do they usually do so because they're genuinely bored or seeking entertainment, rather than avoiding you or an uncomfortable feeling?",
   },
   {
     id: 'Q7',
     section: 'Family routines',
-    text: 'Does your family have at least one shared routine each day — a meal, a bedtime ritual, a morning check-in — that feels like genuine togetherness rather than just logistics?',
+    text: 'Does your family have at least one shared routine each day (a meal, a bedtime ritual, a morning check-in) that feels like genuine togetherness rather than just logistics?',
   },
   {
     id: 'Q8',
     section: 'Family routines',
-    text: 'When life gets busy or stressful, does your family maintain the habits and rituals that keep you close — or do they quietly disappear?',
+    text: 'When life gets busy or stressful, does your family maintain the habits and rituals that keep you close, or do they quietly disappear?',
   },
   {
     id: 'Q9',
     section: 'Parent-child bonding',
-    text: 'Does your child seek you out — not because they need something, but simply because they want to be near you or share something with you?',
+    text: 'Does your child seek you out, not because they need something, but simply because they want to be near you or share something with you?',
   },
   {
     id: 'Q10',
     section: 'Parent-child bonding',
-    text: 'Do you and your child share at least one activity — a hobby, a show, a walk, a joke — that belongs just to the two of you?',
+    text: 'Do you and your child share at least one activity (a hobby, a show, a walk, a joke) that belongs just to the two of you?',
   },
   {
     id: 'Q11',
@@ -59,7 +59,7 @@ export const QUESTIONS = [
   {
     id: 'Q12',
     section: 'Behavior triggers',
-    text: 'After setting a boundary or consequence, does your child understand why — and do they still feel loved by you?',
+    text: 'After setting a boundary or consequence, does your child understand why, and do they still feel loved by you?',
   },
 ] as const
 
