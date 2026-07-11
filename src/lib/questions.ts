@@ -61,7 +61,38 @@ export const QUESTIONS = [
     section: 'Behavior triggers',
     text: 'After setting a boundary or consequence, does your child understand why, and do they still feel loved by you?',
   },
+  {
+    id: 'Q13',
+    section: 'Parental capacity & bandwidth',
+    text: 'On most days, do you have enough unhurried time and mental energy left (after work and other demands) to be fully present with your child, not just physically in the room?',
+  },
+  {
+    id: 'Q14',
+    section: 'Parental capacity & bandwidth',
+    text: 'When work or other pressures are heaviest, do you have a way to protect at least some one-on-one time with your child, rather than letting it be the first thing to go?',
+  },
+  {
+    id: 'Q15',
+    section: 'Conflict resolution',
+    text: 'During a disagreement with your child, are you able to stay calm enough to address the issue without raising your voice or shutting the conversation down?',
+  },
+  {
+    id: 'Q16',
+    section: 'Conflict resolution',
+    text: 'After a conflict is resolved, do you and your child talk about what happened (so the same disagreement is less likely to repeat) rather than just moving on?',
+  },
 ] as const
+
+// Q17 readiness router — NOT scored, never part of QUESTIONS or the score sum.
+// A pure Yes/No identifier used admin-side to see who wants guided support.
+export const READINESS_QUESTION = {
+  prompt:
+    "Building real connection with your child usually takes more than information, it takes support and accountability. Is that something you're open to investing in right now?",
+  options: [
+    { value: true, label: "Yes, I'd welcome guided support" },
+    { value: false, label: 'Not right now, I would like to start with resources I can use on my own' },
+  ],
+} as const
 
 export const SCALE_LABELS = {
   1: 'Never',
@@ -78,15 +109,14 @@ export const SCORE_LABELS: Record<ScoreRange, string> = {
 }
 
 export function getScoreRange(score: number): ScoreRange {
-  if (score <= 29) return 'at_risk'
-  if (score <= 46) return 'under_strain'
+  if (score <= 39) return 'at_risk'
+  if (score <= 61) return 'under_strain'
   return 'strong'
 }
 
 // Label for the call-to-action button shown on the results page and in emails.
-// The link opens Ibironke's personal WhatsApp with a pre-written, personalised
-// message (number + template are set in admin settings).
-export const CTA_LABEL = 'Message Ibironke on WhatsApp'
+// The button still opens Ibironke's personal WhatsApp with the pre-written, personalised message (number + template set in admin settings).
+export const CTA_LABEL = 'Book your session'
 
 // Instant results email copy, from Ibironke's toolkit (Part 4); em dashes
 // replaced with commas/colons/periods for readability (wording otherwise intact).
@@ -99,7 +129,7 @@ export const EMAIL_COPY: Record<ScoreRange, { subject: string; body: string }> =
 
 Thank you for taking the Family Connection Diagnosis™. I know it takes honesty to sit with those questions, and I want you to know that I don't take that lightly.
 
-Your score of [SCORE]/60 places you in the Connection at Risk range.
+Your score of [SCORE]/80 places you in the Connection at Risk range.
 
 I want to be straightforward with you: this score isn't about blame. It's about timing. The patterns that create distance between parents and children rarely happen because of one big moment. They build slowly, in the small decisions we make every day without realising their weight.
 
@@ -127,7 +157,7 @@ Ibironke`,
 
 Your Family Connection Score is in, and I want to give you the full picture.
 
-Your score of [SCORE]/60 places you in the Connection Under Strain range.
+Your score of [SCORE]/80 places you in the Connection Under Strain range.
 
 This is actually one of the most important scores to pay attention to, not because it signals crisis, but because it signals a window. You have real strengths in your home. And you also have areas where, without some intentional attention, the distance will quietly widen.
 
@@ -152,7 +182,7 @@ Ibironke`,
 
 Your results are in, and they're worth celebrating.
 
-Your Family Connection Score of [SCORE]/60 places you in the Connection is Strong range.
+Your Family Connection Score of [SCORE]/80 places you in the Connection is Strong range.
 
 This tells me that you've been doing something right, consistently. The warmth, the routines, the willingness to show up even when it's hard. Your child is experiencing that, even on the days it doesn't feel like enough.
 
