@@ -20,7 +20,7 @@ const SORTS = [
 const SUPPORT = [
   { key: 'all', label: 'Everyone' },
   { key: 'yes', label: 'Wants support' },
-  { key: 'no', label: 'Self-guided' },
+  { key: 'no', label: 'Not right now' },
 ]
 
 export function RespondentsControls({

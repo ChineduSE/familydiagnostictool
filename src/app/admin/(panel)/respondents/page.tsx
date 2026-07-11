@@ -5,7 +5,7 @@ import { CopyLinkButton } from '@/components/admin/CopyLinkButton'
 
 export const dynamic = 'force-dynamic'
 
-const QUIZ_URL = 'quiz.ibironkeosemowo.com'
+const QUIZ_URL = 'familyassessment.ibironkeosemowo.com'
 const VALID_RANGES = ['all', 'at_risk', 'under_strain', 'strong']
 const VALID_SORTS = ['date_desc', 'date_asc', 'score_desc', 'score_asc']
 const VALID_SUPPORT = ['all', 'yes', 'no']

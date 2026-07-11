@@ -31,8 +31,8 @@ export default function HomePage() {
           Discover the State of Your Family Connection
         </h1>
         <p className="mt-6 max-w-[540px] text-[17px] leading-[1.7] text-brand-muted">
-          Answer 12 honest questions and get a personalised diagnosis of your parent-child
-          relationship — with clear guidance on your next steps.
+          Answer 16 honest questions and get a personalised diagnosis of your parent-child
+          relationship, with clear guidance on your next steps.
         </p>
         <p className="mt-4 text-[13px] text-brand-muted">Takes about 5 minutes</p>
         <button className="btn-primary mt-8" type="button" onClick={startDiagnosis}>

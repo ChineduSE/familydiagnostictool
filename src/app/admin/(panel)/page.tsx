@@ -7,7 +7,7 @@ import type { DashboardStats, ScoreRange } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
-const QUIZ_URL = 'quiz.ibironkeosemowo.com'
+const QUIZ_URL = 'familyassessment.ibironkeosemowo.com'
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
