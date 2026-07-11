@@ -9,22 +9,24 @@ type FormErrors = Partial<Record<'firstName' | 'email' | 'api', string>>
 export default function GatePage() {
   const router = useRouter()
   const [answers, setAnswers] = useState<number[] | null>(null)
+  const [wantsSupport, setWantsSupport] = useState<boolean | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
 
   useEffect(() => {
     const session = loadSession()
-    if (!session || !isComplete(session)) {
+    if (!session || !isComplete(session) || session.readiness === null || session.readiness === undefined) {
       router.replace('/')
       return
     }
 
     setAnswers(session.answers as number[])
+    setWantsSupport(session.readiness)
   }, [router])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!answers) return
+    if (!answers || wantsSupport === null) return
 
     const formData = new FormData(event.currentTarget)
     const firstName = String(formData.get('firstName') ?? '').trim()
@@ -50,7 +52,7 @@ export default function GatePage() {
       const response = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstName, email, phone, marketingConsent, answers }),
+        body: JSON.stringify({ firstName, email, phone, marketingConsent, answers, wantsSupport }),
       })
 
       if (!response.ok) throw new Error('Submission failed')
@@ -68,7 +70,7 @@ export default function GatePage() {
     }
   }
 
-  if (!answers) return null
+  if (!answers || wantsSupport === null) return null
 
   return (
     <main className="grid min-h-screen place-items-center bg-brand-offwhite px-5 py-8">

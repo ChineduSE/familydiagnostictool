@@ -2,10 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { QUESTIONS, SCALE_LABELS } from '@/lib/questions'
+import { QUESTIONS, READINESS_QUESTION, SCALE_LABELS } from '@/lib/questions'
 import { createSession, loadSession, saveSession } from '@/lib/quiz-store'
 import { cn } from '@/lib/utils'
 import type { QuizSession } from '@/types'
+
+// currentIndex runs 0..QUESTIONS.length-1 for scored questions, and equals
+// QUESTIONS.length for the final (unscored) readiness screen.
+const READINESS_INDEX = QUESTIONS.length
 
 export default function QuizPage() {
   const router = useRouter()
@@ -22,8 +26,7 @@ export default function QuizPage() {
 
   if (!session) return null
 
-  const question = QUESTIONS[session.currentIndex]
-  const current = session.currentIndex + 1
+  const onReadiness = session.currentIndex >= READINESS_INDEX
 
   function selectAnswer(value: number) {
     if (!session || advancing) return
@@ -31,7 +34,6 @@ export default function QuizPage() {
     const answers = [...session.answers]
     answers[session.currentIndex] = value
     const currentIndex = session.currentIndex
-    const isLastQuestion = currentIndex === QUESTIONS.length - 1
 
     // 1. Show the selection on the CURRENT question (gold fill) right away.
     const answeredSession = { ...session, answers }
@@ -39,26 +41,70 @@ export default function QuizPage() {
     setSession(answeredSession)
     setAdvancing(true)
 
-    // 2. After a short beat so the fill is visible, advance (or finish).
+    // 2. After a short beat so the fill is visible, advance. After the last
+    //    scored question this lands on READINESS_INDEX (the readiness screen).
     window.setTimeout(() => {
-      if (isLastQuestion) {
-        router.push('/gate')
-        return
-      }
-      const nextSession = { answers, currentIndex: currentIndex + 1 }
+      const nextSession = { ...session, answers, currentIndex: currentIndex + 1 }
       saveSession(nextSession)
       setSession(nextSession)
       setAdvancing(false)
     }, 300)
   }
 
+  function selectReadiness(value: boolean) {
+    if (!session || advancing) return
+    const nextSession = { ...session, readiness: value }
+    saveSession(nextSession)
+    setSession(nextSession)
+    router.push('/gate')
+  }
+
   function goBack() {
     if (!session || session.currentIndex === 0) return
-
     const nextSession = { ...session, currentIndex: session.currentIndex - 1 }
     saveSession(nextSession)
     setSession(nextSession)
   }
+
+  if (onReadiness) {
+    return (
+      <main className="min-h-screen bg-brand-offwhite px-5 py-8 text-brand-black">
+        <section className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-[640px] flex-col justify-center text-center">
+          <h2 className="mb-6 font-display text-[clamp(22px,4.5vw,32px)] font-semibold text-brand-black">
+            One last question
+          </h2>
+
+          <p className="mx-auto mb-8 mt-2 max-w-[560px] text-[clamp(19px,3.5vw,26px)] leading-[1.5]">
+            {READINESS_QUESTION.prompt}
+          </p>
+
+          <div className="mx-auto grid w-full max-w-[560px] gap-[10px]">
+            {READINESS_QUESTION.options.map((option) => (
+              <button
+                key={String(option.value)}
+                type="button"
+                onClick={() => selectReadiness(option.value)}
+                className="min-h-[58px] rounded-[10px] border border-[#d9d4cb] bg-brand-white px-5 py-[14px] text-[16px] text-brand-black transition-[transform,border-color,background-color] duration-150 hover:border-brand-gold hover:bg-brand-gold active:scale-95"
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            className="mx-auto mt-7 cursor-pointer border-0 bg-transparent p-0 text-brand-muted transition-colors hover:text-brand-black"
+            type="button"
+            onClick={goBack}
+          >
+            ← Back
+          </button>
+        </section>
+      </main>
+    )
+  }
+
+  const question = QUESTIONS[session.currentIndex]
+  const current = session.currentIndex + 1
 
   return (
     <main className="min-h-screen bg-brand-offwhite px-5 py-8 text-brand-black">
