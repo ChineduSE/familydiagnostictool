@@ -84,7 +84,7 @@ export default function ResultsPage() {
           Your Family Connection Score
         </p>
         <p className="my-[6px] mb-[10px] font-display text-[64px] leading-none">
-          {result.score} / 60
+          {result.score} / 80
         </p>
         <span
           className={cn(

@@ -80,7 +80,7 @@ export default async function RespondentDetailPage({
           <span>{respondent.phone || 'Not provided'}</span>
         </div>
         <div className="mt-4 flex items-center gap-3">
-          <span className="font-display text-2xl">{respondent.score} / 60</span>
+          <span className="font-display text-2xl">{respondent.score} / 80</span>
           <RangeBadge range={range} />
           {isUnsubscribed && (
             <span className="inline-block whitespace-nowrap rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium text-brand-muted">

@@ -33,7 +33,7 @@ export function RespondentRow({ r, status }: { r: Respondent; status?: EmailStat
       <td className="px-4 py-3 font-medium">{r.first_name}</td>
       <td className="px-4 py-3 text-brand-muted">{r.email}</td>
       <td className="px-4 py-3 text-brand-muted">{r.phone || '—'}</td>
-      <td className="px-4 py-3">{r.score} / 60</td>
+      <td className="px-4 py-3">{r.score} / 80</td>
       <td className="px-4 py-3">
         <RangeBadge range={r.score_range as ScoreRange} />
       </td>

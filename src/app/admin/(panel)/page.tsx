@@ -13,7 +13,14 @@ export default async function AdminDashboardPage() {
   const supabase = await createClient()
 
   const { data: statsData } = await supabase.rpc('get_dashboard_stats')
-  const stats: DashboardStats = statsData ?? { total: 0, at_risk: 0, under_strain: 0, strong: 0 }
+  const stats: DashboardStats = statsData ?? {
+    total: 0,
+    at_risk: 0,
+    under_strain: 0,
+    strong: 0,
+    wants_support_yes: 0,
+    wants_support_no: 0,
+  }
 
   const { data: recent } = await supabase
     .from('assessments')
@@ -23,6 +30,7 @@ export default async function AdminDashboardPage() {
 
   const cards = [
     { label: 'Total respondents', value: stats.total },
+    { label: 'Would love a session', value: stats.wants_support_yes },
     { label: 'Connection at risk', value: stats.at_risk },
     { label: 'Connection under strain', value: stats.under_strain },
     { label: 'Connection is strong', value: stats.strong },
@@ -43,7 +51,7 @@ export default async function AdminDashboardPage() {
         </div>
       ) : (
         <>
-          <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
             {cards.map((card) => (
               <div key={card.label} className="rounded-xl border border-black/10 bg-brand-white p-5">
                 <p className="text-3xl font-bold">{card.value}</p>
@@ -84,7 +92,7 @@ export default async function AdminDashboardPage() {
                           {r.first_name}
                         </Link>
                       </td>
-                      <td className="px-4 py-3">{r.score} / 60</td>
+                      <td className="px-4 py-3">{r.score} / 80</td>
                       <td className="px-4 py-3">
                         <RangeBadge range={r.score_range as ScoreRange} />
                       </td>
