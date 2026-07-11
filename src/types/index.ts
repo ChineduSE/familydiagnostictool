@@ -10,6 +10,7 @@ export type QuizAnswer = {
 export type QuizSession = {
   answers: Array<number | null>
   currentIndex: number
+  readiness: boolean | null
 }
 
 export type QuizResult = {
@@ -48,6 +49,7 @@ export type Assessment = {
   score_range: ScoreRange
   answers: QuizAnswer[]
   marketing_consent: boolean
+  wants_support: boolean | null
   submitted_at: string
 }
 
@@ -119,4 +121,6 @@ export type DashboardStats = {
   at_risk: number
   under_strain: number
   strong: number
+  wants_support_yes: number
+  wants_support_no: number
 }

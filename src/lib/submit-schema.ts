@@ -9,4 +9,6 @@ export const submitSchema = z.object({
   // for record-keeping; defaults true if the client omits it.
   marketingConsent: z.boolean().default(true),
   answers: z.array(z.number().int().min(1).max(5)).length(QUESTIONS.length),
+  // Q17 readiness router (unscored): true = "yes, I'd welcome guided support".
+  wantsSupport: z.boolean(),
 })

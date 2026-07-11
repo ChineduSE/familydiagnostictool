@@ -10,6 +10,7 @@ const validPayload = {
   phone: '08012345678',
   marketingConsent: true,
   answers: validAnswers,
+  wantsSupport: true,
 }
 
 describe('submitSchema', () => {
@@ -61,5 +62,19 @@ describe('submitSchema', () => {
     const answers = [...validAnswers]
     answers[0] = 3.5
     expect(submitSchema.safeParse({ ...validPayload, answers }).success).toBe(false)
+  })
+
+  it('accepts wantsSupport = false', () => {
+    expect(submitSchema.safeParse({ ...validPayload, wantsSupport: false }).success).toBe(true)
+  })
+
+  it('rejects a missing wantsSupport', () => {
+    const { wantsSupport, ...withoutReadiness } = validPayload
+    void wantsSupport
+    expect(submitSchema.safeParse(withoutReadiness).success).toBe(false)
+  })
+
+  it('rejects a non-boolean wantsSupport', () => {
+    expect(submitSchema.safeParse({ ...validPayload, wantsSupport: 'yes' }).success).toBe(false)
   })
 })

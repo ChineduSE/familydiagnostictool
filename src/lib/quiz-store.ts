@@ -8,6 +8,7 @@ export function createSession(): QuizSession {
   return {
     answers: Array.from({ length: QUESTIONS.length }, () => null),
     currentIndex: 0,
+    readiness: null,
   }
 }
 
