@@ -994,10 +994,16 @@ On the deployed (or local) app: take the quiz fully, verify the results page sho
 
 ---
 
-## What you (the user) need to do
+## Cutover runbook (ORDER MATTERS)
 
-1. **Apply migration 006** in the Supabase SQL Editor (Task 5, Step 3) — I cannot run DDL from here.
-2. **Delete the historical test data** (Task 8, Step 3) — or tell me to do it via the service-role key.
-3. **Eyeball the WhatsApp settings message** reads /80 (Task 8, Step 4).
+The final review flagged one operational risk: the old DB constraint is `score between 12 and 60`, and the new frontend produces scores up to 80. If the new frontend goes live *before* migration 006, any submission scoring 62–80 hits the old constraint, the insert fails, and that parent gets a 500 instead of results. Conversely, applying migration 006 while the *old* 12-question frontend is still live would reject an old score of 12–15 (now below the widened floor of 16). Either way there is a brief mismatched window, so do these in order and close together:
+
+1. **Apply migration 006** in the Supabase SQL Editor for `familydiagnosticquiz` (Task 5, Step 3) — I cannot run DDL from here. This widens the score check to 16–80 and adds the readiness column/stats.
+2. **Delete the historical test data** (Task 8, Step 3) — clears the old /60 rows (including any 12–15 scores) so nothing violates the widened floor. Tell me to run it via the service-role key, or do it in the dashboard.
+3. **Deploy the frontend** (push to `main` → Vercel auto-deploy) — the 16-question quiz. Do this right after steps 1–2.
+4. **Eyeball the WhatsApp settings message** reads /80 (Task 8, Step 4).
+5. **End-to-end sanity check** (Task 8, Step 5) — take the quiz, confirm `NN / 80`, correct band, "Book your session" opens WhatsApp, results email shows /80.
+
+Because the historical rows are test-only and traffic is effectively nil during a solo launch, the mismatched window is not a real concern here — but following this order removes it entirely.
 
 Everything else (code, tests, commits) I can do.
