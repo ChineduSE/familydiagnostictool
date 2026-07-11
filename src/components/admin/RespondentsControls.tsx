@@ -17,7 +17,21 @@ const SORTS = [
   { key: 'score_asc', label: 'Score: low to high' },
 ]
 
-export function RespondentsControls({ range, sort }: { range: string; sort: string }) {
+const SUPPORT = [
+  { key: 'all', label: 'Everyone' },
+  { key: 'yes', label: 'Wants support' },
+  { key: 'no', label: 'Self-guided' },
+]
+
+export function RespondentsControls({
+  range,
+  sort,
+  support,
+}: {
+  range: string
+  sort: string
+  support: string
+}) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -43,6 +57,24 @@ export function RespondentsControls({ range, sort }: { range: string; sort: stri
             )}
           >
             {r.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap gap-1">
+        {SUPPORT.map((s) => (
+          <button
+            key={s.key}
+            type="button"
+            onClick={() => setParam('support', s.key)}
+            className={cn(
+              'rounded-full px-3 py-1.5 text-xs font-medium transition-colors',
+              support === s.key
+                ? 'bg-brand-black text-brand-white'
+                : 'bg-black/5 text-brand-muted hover:bg-black/10'
+            )}
+          >
+            {s.label}
           </button>
         ))}
       </div>

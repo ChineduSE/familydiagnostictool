@@ -8,21 +8,25 @@ export const dynamic = 'force-dynamic'
 const QUIZ_URL = 'quiz.ibironkeosemowo.com'
 const VALID_RANGES = ['all', 'at_risk', 'under_strain', 'strong']
 const VALID_SORTS = ['date_desc', 'date_asc', 'score_desc', 'score_asc']
+const VALID_SUPPORT = ['all', 'yes', 'no']
 
-type SearchParams = Promise<{ range?: string; sort?: string }>
+type SearchParams = Promise<{ range?: string; sort?: string; support?: string }>
 
 export default async function RespondentsPage({ searchParams }: { searchParams: SearchParams }) {
   const sp = await searchParams
   const range = VALID_RANGES.includes(sp.range ?? '') ? (sp.range as string) : 'all'
   const sort = VALID_SORTS.includes(sp.sort ?? '') ? (sp.sort as string) : 'date_desc'
+  const support = VALID_SUPPORT.includes(sp.support ?? '') ? (sp.support as string) : 'all'
 
   const supabase = await createClient()
 
   let query = supabase
     .from('assessments')
-    .select('id, first_name, email, phone, score, score_range, submitted_at')
+    .select('id, first_name, email, phone, score, score_range, wants_support, submitted_at')
 
   if (range !== 'all') query = query.eq('score_range', range)
+  if (support === 'yes') query = query.eq('wants_support', true)
+  if (support === 'no') query = query.eq('wants_support', false)
 
   switch (sort) {
     case 'date_asc':
@@ -57,14 +61,14 @@ export default async function RespondentsPage({ searchParams }: { searchParams: 
     }
   }
 
-  const isFiltered = range !== 'all'
+  const isFiltered = range !== 'all' || support !== 'all'
 
   return (
     <div>
       <h1 className="font-display text-[clamp(29px,5vw,40px)] leading-tight">Respondents</h1>
 
       <div className="mt-5">
-        <RespondentsControls range={range} sort={sort} />
+        <RespondentsControls range={range} sort={sort} support={support} />
       </div>
 
       <p className="mt-4 text-sm text-brand-muted">
@@ -98,6 +102,7 @@ export default async function RespondentsPage({ searchParams }: { searchParams: 
                 <th className="px-4 py-3 font-medium">Phone</th>
                 <th className="px-4 py-3 font-medium">Score</th>
                 <th className="px-4 py-3 font-medium">Range</th>
+                <th className="px-4 py-3 font-medium">Support</th>
                 <th className="px-4 py-3 font-medium">Date</th>
                 <th className="px-4 py-3 font-medium">Email</th>
               </tr>

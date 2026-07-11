@@ -29,7 +29,7 @@ export default async function RespondentDetailPage({
 
   const { data: respondent } = await supabase
     .from('assessments')
-    .select('id, first_name, email, phone, score, score_range, answers, submitted_at')
+    .select('id, first_name, email, phone, score, score_range, wants_support, answers, submitted_at')
     .eq('id', id)
     .maybeSingle()
 
@@ -90,6 +90,16 @@ export default async function RespondentDetailPage({
         </div>
         <p className="mt-2 text-xs text-brand-muted">
           Submitted {formatDate(respondent.submitted_at)}
+        </p>
+        <p className="mt-2 text-xs text-brand-muted">
+          Wants guided support:{' '}
+          <span className="font-medium text-brand-black">
+            {respondent.wants_support === true
+              ? 'Yes'
+              : respondent.wants_support === false
+                ? 'No'
+                : 'Not answered'}
+          </span>
         </p>
       </div>
 

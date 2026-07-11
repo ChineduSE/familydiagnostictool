@@ -12,6 +12,7 @@ type Respondent = {
   phone: string | null
   score: number
   score_range: string
+  wants_support: boolean | null
   submitted_at: string
 }
 
@@ -36,6 +37,9 @@ export function RespondentRow({ r, status }: { r: Respondent; status?: EmailStat
       <td className="px-4 py-3">{r.score} / 80</td>
       <td className="px-4 py-3">
         <RangeBadge range={r.score_range as ScoreRange} />
+      </td>
+      <td className="px-4 py-3 text-brand-muted">
+        {r.wants_support === true ? 'Yes' : r.wants_support === false ? 'No' : '—'}
       </td>
       <td className="px-4 py-3 text-brand-muted">{formatDate(r.submitted_at)}</td>
       <td className="px-4 py-3 text-brand-muted">{emailStatus(status)}</td>
