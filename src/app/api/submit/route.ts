@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'Validation failed' }, { status: 400 })
   }
 
-  const { firstName, email, phone, marketingConsent, answers } = parsed.data
+  const { firstName, email, phone, marketingConsent, answers, wantsSupport } = parsed.data
   const score = answers.reduce((total, value) => total + value, 0)
   const scoreRange = getScoreRange(score)
   const structuredAnswers = QUESTIONS.map((question, index) => ({
@@ -64,6 +64,7 @@ export async function POST(request: Request) {
         phone: phone || null,
         score,
         score_range: scoreRange,
+        wants_support: wantsSupport,
         answers: structuredAnswers,
         marketing_consent: marketingConsent,
       })
