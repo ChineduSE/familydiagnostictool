@@ -17,3 +17,8 @@ export const EMAIL_FROM =
 // When unset, replies fall back to EMAIL_FROM. Set EMAIL_REPLY_TO so replies go
 // straight to a real monitored inbox without needing Resend inbound receiving.
 export const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || undefined
+
+// Inbox that receives "wants a session" notifications. Defaults to the reply-to
+// inbox (Ibironke's Gmail) so no new env var is required to ship.
+export const OWNER_EMAIL =
+  process.env.OWNER_EMAIL || process.env.EMAIL_REPLY_TO || EMAIL_FROM

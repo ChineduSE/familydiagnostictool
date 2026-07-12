@@ -17,6 +17,9 @@ export type QuizResult = {
   firstName: string
   score: number
   scoreRange: ScoreRange
+  wantsSupport?: boolean
+  assessmentId?: string
+  bookToken?: string
 }
 
 // ── Enums shared with the database ──────────────────────────
@@ -50,6 +53,7 @@ export type Assessment = {
   answers: QuizAnswer[]
   marketing_consent: boolean
   wants_support: boolean | null
+  session_request_at: string | null
   submitted_at: string
 }
 
