@@ -1,6 +1,6 @@
 import { Text } from '@react-email/components'
 import { Fragment } from 'react'
-import { CTA_LABEL, EMAIL_COPY } from '@/lib/questions'
+import { CTA_LABEL, EMAIL_COPY, buildEmailBody } from '@/lib/questions'
 import type { ScoreRange } from '@/types'
 import { BaseEmail } from './BaseEmail'
 import { CtaButton } from './CtaButton'
@@ -9,6 +9,7 @@ export type ResultsEmailProps = {
   firstName: string
   score: number
   scoreRange: ScoreRange
+  wantsSupport: boolean
   ctaUrl?: string
   logoUrl?: string
   unsubscribeUrl?: string
@@ -37,10 +38,12 @@ function Paragraph({ text }: { text: string }) {
   )
 }
 
-export function ResultsEmail({ firstName, score, scoreRange, ctaUrl, logoUrl, unsubscribeUrl }: ResultsEmailProps) {
-  const { subject, body } = EMAIL_COPY[scoreRange]
+export function ResultsEmail({ firstName, score, scoreRange, wantsSupport, ctaUrl, logoUrl, unsubscribeUrl }: ResultsEmailProps) {
+  const { subject } = EMAIL_COPY[scoreRange]
   const previewText = subject.replaceAll('[First name]', firstName)
-  const resolved = body.replaceAll('[First name]', firstName).replaceAll('[SCORE]', String(score))
+  const resolved = buildEmailBody(scoreRange, wantsSupport)
+    .replaceAll('[First name]', firstName)
+    .replaceAll('[SCORE]', String(score))
   const blocks = resolved.split('\n\n')
 
   return (

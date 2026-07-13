@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CTA_LABEL, RESULTS_COPY, SCORE_LABELS } from '@/lib/questions'
+import { CTA_LABEL, buildResultsCopy, SCORE_LABELS } from '@/lib/questions'
 import { loadResult } from '@/lib/quiz-store'
 import { buildWhatsAppUrl } from '@/lib/whatsapp'
 import { cn } from '@/lib/utils'
@@ -21,7 +21,7 @@ function safeHttpUrl(url: string): string {
 
 function renderCopy(result: QuizResult, ctaUrl: string) {
   const safeCtaUrl = safeHttpUrl(ctaUrl)
-  const copy = RESULTS_COPY[result.scoreRange]
+  const copy = buildResultsCopy(result.scoreRange, Boolean(result.wantsSupport))
     .replaceAll('[First name]', result.firstName)
     .replaceAll('[SCORE]', String(result.score))
   const sections = copy.split('\n\n')

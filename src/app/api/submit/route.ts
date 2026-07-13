@@ -93,7 +93,7 @@ export async function POST(request: Request) {
   // Send the instant results email. An email failure must never block the
   // results page — the assessment is already saved, so we always return success.
   try {
-    const sent = await sendResultsEmail({ firstName, email, score, scoreRange, ctaUrl, logoUrl })
+    const sent = await sendResultsEmail({ firstName, email, score, scoreRange, wantsSupport, ctaUrl, logoUrl })
 
     if (supabase && sent.success && sent.id) {
       await supabase.from('email_messages').insert({

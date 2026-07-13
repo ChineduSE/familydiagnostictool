@@ -61,7 +61,7 @@ export default function GatePage() {
         score: number
         scoreRange: 'at_risk' | 'under_strain' | 'strong'
       }
-      saveResult({ firstName, score: result.score, scoreRange: result.scoreRange })
+      saveResult({ firstName, score: result.score, scoreRange: result.scoreRange, wantsSupport })
       clearSession()
       router.push('/results')
     } catch {

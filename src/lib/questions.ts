@@ -140,6 +140,8 @@ Based on your responses, the areas I'd focus on first are:
 → Behavior: learning to read what difficult behavior is actually communicating
 → Emotional availability: making your presence felt, not just your presence known
 
+[CTA LEAD]
+
 I'd love to help you map this out personally.
 
 A 1-on-1 Family Connection Session gives us the space to go deeper into your specific results, understand your family's unique dynamic, and build a reconnection plan that fits your real life, not a generic checklist.
@@ -167,6 +169,8 @@ The areas where you're doing well are holding your family together. The areas un
 
 These are fixable. Not with a complete overhaul, but with two or three consistent shifts.
 
+[CTA LEAD]
+
 If you'd like to know exactly what those shifts are for your family specifically, a Family Connection Session with me is the clearest next step.
 
 [CTA BUTTON]
@@ -189,6 +193,8 @@ This tells me that you've been doing something right, consistently. The warmth, 
 I also want to be honest with you: a strong score today doesn't mean the work is done. Family connection is a living, moving thing. As children grow, their needs shift, and the habits that worked beautifully at one stage can quietly stop working at the next.
 
 The parents I worry least about are the ones who are curious and proactive. The fact that you took this diagnosis tells me you're one of them.
+
+[CTA LEAD]
 
 If you'd like to understand your score in more depth (including the subtle areas to keep an eye on as your child moves through their next developmental stage), a Family Connection Session is a great investment in staying ahead.
 
@@ -215,6 +221,8 @@ Your three biggest areas to focus on right now:
 → Responding to behavior with curiosity before consequence
 → Making space for your child's emotions without rushing to fix them
 
+[CTA LEAD]
+
 The next step is a 1-on-1 Family Connection Session with Ibironke, where we look closely at your specific score, identify the two or three changes that will make the biggest difference in your home, and build a practical reconnection plan together, starting now.
 
 [CTA BUTTON]
@@ -235,6 +243,8 @@ Your three areas to strengthen:
 
 Many parents in this score range find that two or three small, consistent changes shift the entire dynamic at home within weeks, before the distance becomes the new normal.
 
+[CTA LEAD]
+
 If you'd like a personalised look at exactly where to focus, a Family Connection Session with Ibironke will pinpoint exactly where the distance is growing and map out your next steps clearly.
 
 [CTA BUTTON]
@@ -253,9 +263,37 @@ Your focus areas going forward:
 → Protecting the rituals that have been holding your connection together
 → Staying ahead of screen habits before they become the default
 
+[CTA LEAD]
+
 Parents with strong scores often find the most value in surrounding themselves with others who are equally committed. Because staying consistent alone is harder than it looks, and accountability is what separates families who thrive long-term from those who wonder what quietly changed.
 
 [CTA BUTTON]
 
 Well done for doing this. Your family feels the difference, even when they don't say it.`,
+}
+
+// Shows or hides the session CTA block based on the parent's Q17 answer. The copy
+// carries two markers: [CTA LEAD] begins the session-pitch block and [CTA BUTTON]
+// is where the button renders. For "yes" we drop only the [CTA LEAD] marker
+// (keeping the pitch + button). For "no" we drop everything from [CTA LEAD]
+// through [CTA BUTTON] so no dangling pitch remains.
+function applyCtaVisibility(text: string, wantsSupport: boolean): string {
+  const blocks = text.split('\n\n')
+  const leadIdx = blocks.indexOf('[CTA LEAD]')
+  const btnIdx = blocks.indexOf('[CTA BUTTON]')
+  if (leadIdx === -1 || btnIdx === -1) return text
+  if (wantsSupport) {
+    blocks.splice(leadIdx, 1)
+  } else {
+    blocks.splice(leadIdx, btnIdx - leadIdx + 1)
+  }
+  return blocks.join('\n\n')
+}
+
+export function buildResultsCopy(range: ScoreRange, wantsSupport: boolean): string {
+  return applyCtaVisibility(RESULTS_COPY[range], wantsSupport)
+}
+
+export function buildEmailBody(range: ScoreRange, wantsSupport: boolean): string {
+  return applyCtaVisibility(EMAIL_COPY[range].body, wantsSupport)
 }

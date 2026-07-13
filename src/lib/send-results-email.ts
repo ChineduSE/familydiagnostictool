@@ -11,6 +11,7 @@ type SendResultsEmailParams = {
   email: string
   score: number
   scoreRange: ScoreRange
+  wantsSupport: boolean
   ctaUrl?: string
   logoUrl?: string
 }
@@ -30,6 +31,7 @@ export async function sendResultsEmail(params: SendResultsEmailParams): Promise<
         firstName: params.firstName,
         score: params.score,
         scoreRange: params.scoreRange,
+        wantsSupport: params.wantsSupport,
         ctaUrl: params.ctaUrl,
         logoUrl: params.logoUrl,
         unsubscribeUrl: buildUnsubscribeUrl(params.email),
