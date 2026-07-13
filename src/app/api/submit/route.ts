@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { QUESTIONS, getScoreRange } from '@/lib/questions'
 import { submitSchema } from '@/lib/submit-schema'
 import { sendResultsEmail } from '@/lib/send-results-email'
-import { buildWhatsAppUrl } from '@/lib/whatsapp'
+import { buildBookingUrl, signBookingToken } from '@/lib/booking-token'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 
 export async function POST(request: Request) {
@@ -26,6 +26,7 @@ export async function POST(request: Request) {
   let assessmentId: string | null = null
   let ctaUrl = ''
   let logoUrl: string | undefined
+  let bookToken: string | undefined
 
   if (supabase) {
     // Upsert the contact (one row per email, preserved across repeat quizzes).
@@ -79,15 +80,15 @@ export async function POST(request: Request) {
 
     const { data: settings } = await supabase
       .from('settings')
-      .select('whatsapp_number, whatsapp_message_template, logo_url')
+      .select('logo_url')
       .eq('id', 1)
       .maybeSingle()
-
-    ctaUrl = buildWhatsAppUrl(settings?.whatsapp_number, settings?.whatsapp_message_template, {
-      firstName,
-      score,
-    })
     if (settings?.logo_url) logoUrl = settings.logo_url
+
+    if (assessmentId) {
+      ctaUrl = buildBookingUrl(assessmentId)
+      bookToken = signBookingToken(assessmentId)
+    }
   }
 
   // Send the instant results email. An email failure must never block the
@@ -110,5 +111,5 @@ export async function POST(request: Request) {
     console.error('Results email error:', err)
   }
 
-  return NextResponse.json({ success: true, score, scoreRange })
+  return NextResponse.json({ success: true, score, scoreRange, assessmentId, bookToken })
 }
