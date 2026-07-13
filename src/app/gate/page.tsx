@@ -60,8 +60,17 @@ export default function GatePage() {
       const result = (await response.json()) as {
         score: number
         scoreRange: 'at_risk' | 'under_strain' | 'strong'
+        assessmentId?: string
+        bookToken?: string
       }
-      saveResult({ firstName, score: result.score, scoreRange: result.scoreRange, wantsSupport })
+      saveResult({
+        firstName,
+        score: result.score,
+        scoreRange: result.scoreRange,
+        wantsSupport,
+        assessmentId: result.assessmentId,
+        bookToken: result.bookToken,
+      })
       clearSession()
       router.push('/results')
     } catch {
