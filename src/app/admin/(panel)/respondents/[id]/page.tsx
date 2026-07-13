@@ -29,7 +29,7 @@ export default async function RespondentDetailPage({
 
   const { data: respondent } = await supabase
     .from('assessments')
-    .select('id, first_name, email, phone, score, score_range, wants_support, answers, submitted_at')
+    .select('id, first_name, email, phone, score, score_range, wants_support, session_request_at, answers, submitted_at')
     .eq('id', id)
     .maybeSingle()
 
@@ -99,6 +99,14 @@ export default async function RespondentDetailPage({
               : respondent.wants_support === false
                 ? 'No'
                 : 'Not answered'}
+          </span>
+        </p>
+        <p className="mt-2 text-xs text-brand-muted">
+          Requested a session:{' '}
+          <span className="font-medium text-brand-black">
+            {respondent.session_request_at
+              ? `Yes (${formatDate(respondent.session_request_at)})`
+              : 'No'}
           </span>
         </p>
       </div>

@@ -20,6 +20,7 @@ export default async function AdminDashboardPage() {
     strong: 0,
     wants_support_yes: 0,
     wants_support_no: 0,
+    session_requests: 0,
   }
 
   const { data: recent } = await supabase
@@ -31,6 +32,7 @@ export default async function AdminDashboardPage() {
   const cards = [
     { label: 'Total respondents', value: stats.total },
     { label: 'Would love a session', value: stats.wants_support_yes },
+    { label: 'Requested a session', value: stats.session_requests },
     { label: 'Connection at risk', value: stats.at_risk },
     { label: 'Connection under strain', value: stats.under_strain },
     { label: 'Connection is strong', value: stats.strong },
@@ -51,7 +53,7 @@ export default async function AdminDashboardPage() {
         </div>
       ) : (
         <>
-          <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
+          <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
             {cards.map((card) => (
               <div key={card.label} className="rounded-xl border border-black/10 bg-brand-white p-5">
                 <p className="text-3xl font-bold">{card.value}</p>

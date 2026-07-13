@@ -127,4 +127,5 @@ export type DashboardStats = {
   strong: number
   wants_support_yes: number
   wants_support_no: number
+  session_requests: number
 }
