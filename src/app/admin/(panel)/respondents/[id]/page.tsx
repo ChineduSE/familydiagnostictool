@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { QUESTIONS, SCALE_LABELS, SCORE_LABELS } from '@/lib/questions'
 import { emailStatus, formatDate } from '@/lib/admin-format'
 import { RangeBadge } from '@/components/admin/RangeBadge'
+import { DeleteRespondentButton } from '@/components/admin/DeleteRespondentButton'
 import { cn } from '@/lib/utils'
 import type { QuizAnswer, ScoreRange } from '@/types'
 
@@ -173,6 +174,8 @@ export default async function RespondentDetailPage({
       <p className="mt-6 text-xs text-brand-muted">
         Score band: {SCORE_LABELS[range]}
       </p>
+
+      <DeleteRespondentButton id={respondent.id} firstName={respondent.first_name} />
     </div>
   )
 }
