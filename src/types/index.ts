@@ -19,7 +19,6 @@ export type QuizResult = {
   scoreRange: ScoreRange
   wantsSupport?: boolean
   assessmentId?: string
-  bookToken?: string
 }
 
 // ── Enums shared with the database ──────────────────────────

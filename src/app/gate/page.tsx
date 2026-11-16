@@ -61,7 +61,6 @@ export default function GatePage() {
         score: number
         scoreRange: 'at_risk' | 'under_strain' | 'strong'
         assessmentId?: string
-        bookToken?: string
       }
       saveResult({
         firstName,
@@ -69,7 +68,6 @@ export default function GatePage() {
         scoreRange: result.scoreRange,
         wantsSupport,
         assessmentId: result.assessmentId,
-        bookToken: result.bookToken,
       })
       clearSession()
       router.push('/results')

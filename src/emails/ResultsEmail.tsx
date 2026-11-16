@@ -1,18 +1,27 @@
 import { Text } from '@react-email/components'
 import { Fragment } from 'react'
-import { CTA_LABEL, EMAIL_COPY, buildEmailBody } from '@/lib/questions'
+import { EMAIL_COPY, SUPPORT_CONFIRMATION, buildEmailBody } from '@/lib/questions'
 import type { ScoreRange } from '@/types'
 import { BaseEmail } from './BaseEmail'
-import { CtaButton } from './CtaButton'
 
 export type ResultsEmailProps = {
   firstName: string
   score: number
   scoreRange: ScoreRange
   wantsSupport: boolean
-  ctaUrl?: string
   logoUrl?: string
   unsubscribeUrl?: string
+}
+
+const confirmationStyle = {
+  fontSize: '15px',
+  lineHeight: '1.6',
+  fontWeight: 600,
+  color: '#166534',
+  backgroundColor: '#dcfce7',
+  borderRadius: '10px',
+  padding: '12px 16px',
+  margin: '10px 0 26px',
 }
 
 const paragraphStyle = {
@@ -38,7 +47,7 @@ function Paragraph({ text }: { text: string }) {
   )
 }
 
-export function ResultsEmail({ firstName, score, scoreRange, wantsSupport, ctaUrl, logoUrl, unsubscribeUrl }: ResultsEmailProps) {
+export function ResultsEmail({ firstName, score, scoreRange, wantsSupport, logoUrl, unsubscribeUrl }: ResultsEmailProps) {
   const { subject } = EMAIL_COPY[scoreRange]
   const previewText = subject.replaceAll('[First name]', firstName)
   const resolved = buildEmailBody(scoreRange, wantsSupport)
@@ -50,7 +59,9 @@ export function ResultsEmail({ firstName, score, scoreRange, wantsSupport, ctaUr
     <BaseEmail previewText={previewText} logoUrl={logoUrl} unsubscribeUrl={unsubscribeUrl}>
       {blocks.map((block, index) =>
         block.trim() === '[CTA BUTTON]' ? (
-          <CtaButton key={index} label={CTA_LABEL} url={ctaUrl} />
+          <Text key={index} style={confirmationStyle}>
+            {SUPPORT_CONFIRMATION}
+          </Text>
         ) : (
           <Paragraph key={index} text={block} />
         )

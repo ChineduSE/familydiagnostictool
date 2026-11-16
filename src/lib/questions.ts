@@ -118,6 +118,11 @@ export function getScoreRange(score: number): ScoreRange {
 // The button still opens Ibironke's personal WhatsApp with the pre-written, personalised message (number + template set in admin settings).
 export const CTA_LABEL = 'Book your session'
 
+// Shown to "Yes" parents (results page + results email) where the booking button
+// used to be. Their Yes already notified Ibironke at submit, so no click is needed.
+export const SUPPORT_CONFIRMATION =
+  'Thank you for saying yes. Ibironke will reach out to you personally to arrange your guided support, so keep an eye on your inbox.'
+
 // Instant results email copy, from Ibironke's toolkit (Part 4); em dashes
 // replaced with commas/colons/periods for readability (wording otherwise intact).
 // [First name] and [SCORE] are substituted at send time; [CTA BUTTON] marks

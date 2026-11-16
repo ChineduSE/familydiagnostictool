@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CTA_LABEL, buildResultsCopy, SCORE_LABELS } from '@/lib/questions'
+import { SUPPORT_CONFIRMATION, buildResultsCopy, SCORE_LABELS } from '@/lib/questions'
 import { loadResult } from '@/lib/quiz-store'
 import { cn } from '@/lib/utils'
 import type { QuizResult, ScoreRange } from '@/types'
@@ -13,12 +13,10 @@ const BADGE_VARIANT: Record<ScoreRange, string> = {
   strong: 'bg-[#dcfce7] text-[#166534]',
 }
 
-type BookState = 'idle' | 'sending' | 'sent' | 'error'
 
 export default function ResultsPage() {
   const router = useRouter()
   const [result, setResult] = useState<QuizResult | null>(null)
-  const [bookState, setBookState] = useState<BookState>('idle')
 
   useEffect(() => {
     const storedResult = loadResult()
@@ -30,21 +28,6 @@ export default function ResultsPage() {
   }, [router])
 
   if (!result) return null
-
-  async function book() {
-    if (!result?.assessmentId || !result?.bookToken) return
-    setBookState('sending')
-    try {
-      const res = await fetch('/api/book', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assessmentId: result.assessmentId, token: result.bookToken }),
-      })
-      setBookState(res.ok ? 'sent' : 'error')
-    } catch {
-      setBookState('error')
-    }
-  }
 
   const copy = buildResultsCopy(result.scoreRange, Boolean(result.wantsSupport))
     .replaceAll('[First name]', result.firstName)
@@ -71,30 +54,14 @@ export default function ResultsPage() {
         <div className="mt-[30px]">
           {sections.map((section, index) => {
             if (section === '[CTA BUTTON]') {
-              if (bookState === 'sent') {
-                return (
-                  <p
-                    key={index}
-                    className="my-[10px] mb-[26px] rounded-[10px] bg-[#dcfce7] px-4 py-3 text-[15px] font-medium text-[#166534]"
-                  >
-                    Your request is on its way to Ibironke. She will reply to your email shortly.
-                  </p>
-                )
-              }
+              // The parent's "Yes" already notified Ibironke at submit.
               return (
-                <div key={index} className="my-[10px] mb-[26px]">
-                  <button
-                    className="btn-primary"
-                    type="button"
-                    onClick={book}
-                    disabled={bookState === 'sending' || !result.assessmentId}
-                  >
-                    {bookState === 'sending' ? 'Sending…' : CTA_LABEL}
-                  </button>
-                  {bookState === 'error' && (
-                    <p className="mt-2 text-sm text-[#b91c1c]">Something went wrong. Please try again.</p>
-                  )}
-                </div>
+                <p
+                  key={index}
+                  className="my-[10px] mb-[26px] rounded-[10px] bg-[#dcfce7] px-4 py-3 text-[15px] font-medium text-[#166534]"
+                >
+                  {SUPPORT_CONFIRMATION}
+                </p>
               )
             }
             return (

@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server'
 import { QUESTIONS, getScoreRange } from '@/lib/questions'
 import { submitSchema } from '@/lib/submit-schema'
 import { sendResultsEmail } from '@/lib/send-results-email'
-import { buildBookingUrl, signBookingToken } from '@/lib/booking-token'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
+import { notifySessionRequest } from '@/lib/notify-session-request'
 
 export async function POST(request: Request) {
   const parsed = submitSchema.safeParse(await request.json())
@@ -24,9 +24,7 @@ export async function POST(request: Request) {
   const supabase = createSupabaseAdmin()
   let contactId: string | null = null
   let assessmentId: string | null = null
-  let ctaUrl = ''
   let logoUrl: string | undefined
-  let bookToken: string | undefined
 
   if (supabase) {
     // Upsert the contact (one row per email, preserved across repeat quizzes).
@@ -84,17 +82,24 @@ export async function POST(request: Request) {
       .eq('id', 1)
       .maybeSingle()
     if (settings?.logo_url) logoUrl = settings.logo_url
+  }
 
-    if (assessmentId) {
-      ctaUrl = buildBookingUrl(assessmentId)
-      bookToken = signBookingToken(assessmentId)
+  // A "Yes" to the readiness question is itself the session request: tell
+  // Ibironke now, so the parent never has to click a separate booking button.
+  // A failure here must never block the results page.
+  if (supabase && assessmentId && wantsSupport) {
+    try {
+      const notified = await notifySessionRequest(supabase, assessmentId)
+      if (!notified.ok) console.error('Session request not sent:', notified)
+    } catch (err) {
+      console.error('Session request error:', err)
     }
   }
 
   // Send the instant results email. An email failure must never block the
   // results page — the assessment is already saved, so we always return success.
   try {
-    const sent = await sendResultsEmail({ firstName, email, score, scoreRange, wantsSupport, ctaUrl, logoUrl })
+    const sent = await sendResultsEmail({ firstName, email, score, scoreRange, wantsSupport, logoUrl })
 
     if (supabase && sent.success && sent.id) {
       await supabase.from('email_messages').insert({
@@ -111,5 +116,5 @@ export async function POST(request: Request) {
     console.error('Results email error:', err)
   }
 
-  return NextResponse.json({ success: true, score, scoreRange, assessmentId, bookToken })
+  return NextResponse.json({ success: true, score, scoreRange, assessmentId })
 }
