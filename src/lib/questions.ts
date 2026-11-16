@@ -103,9 +103,9 @@ export const SCALE_LABELS = {
 } as const
 
 export const SCORE_LABELS: Record<ScoreRange, string> = {
-  at_risk: 'Connection at risk',
-  under_strain: 'Connection under strain',
-  strong: 'Connection is strong',
+  at_risk: 'Time to Reconnect',
+  under_strain: 'Connection in Progress',
+  strong: 'Connected and Growing',
 }
 
 export function getScoreRange(score: number): ScoreRange {
@@ -129,7 +129,7 @@ export const EMAIL_COPY: Record<ScoreRange, { subject: string; body: string }> =
 
 Thank you for taking the Family Connection Diagnosis™. I know it takes honesty to sit with those questions, and I want you to know that I don't take that lightly.
 
-Your score of [SCORE]/80 places you in the Connection at Risk range.
+Your score of [SCORE]/80 places you in the Time to Reconnect range.
 
 I want to be straightforward with you: this score isn't about blame. It's about timing. The patterns that create distance between parents and children rarely happen because of one big moment. They build slowly, in the small decisions we make every day without realising their weight.
 
@@ -159,7 +159,7 @@ Ibironke`,
 
 Your Family Connection Score is in, and I want to give you the full picture.
 
-Your score of [SCORE]/80 places you in the Connection Under Strain range.
+Your score of [SCORE]/80 places you in the Connection in Progress range.
 
 This is actually one of the most important scores to pay attention to, not because it signals crisis, but because it signals a window. You have real strengths in your home. And you also have areas where, without some intentional attention, the distance will quietly widen.
 
@@ -186,7 +186,7 @@ Ibironke`,
 
 Your results are in, and they're worth celebrating.
 
-Your Family Connection Score of [SCORE]/80 places you in the Connection is Strong range.
+Your Family Connection Score of [SCORE]/80 places you in the Connected and Growing range.
 
 This tells me that you've been doing something right, consistently. The warmth, the routines, the willingness to show up even when it's hard. Your child is experiencing that, even on the days it doesn't feel like enough.
 

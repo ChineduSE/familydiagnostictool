@@ -2,13 +2,14 @@ import { formatDate } from '@/lib/admin-format'
 import { BroadcastStatusBadge } from './BroadcastStatusBadge'
 import { EmailPreview } from './EmailPreview'
 import type { BroadcastAudience } from '@/lib/audience'
+import { SCORE_LABELS } from '@/lib/questions'
 import type { Broadcast } from '@/types'
 
 const AUDIENCE_LABELS: Record<BroadcastAudience, string> = {
   all: 'All respondents',
-  at_risk: 'At risk',
-  under_strain: 'Under strain',
-  strong: 'Strong',
+  at_risk: SCORE_LABELS.at_risk,
+  under_strain: SCORE_LABELS.under_strain,
+  strong: SCORE_LABELS.strong,
 }
 
 export function BroadcastDetail({ broadcast, logoUrl }: { broadcast: Broadcast; logoUrl: string | null }) {

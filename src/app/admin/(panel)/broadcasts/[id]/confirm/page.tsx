@@ -6,15 +6,16 @@ import { recipientCountFor, type BroadcastAudience } from '@/lib/audience'
 import { resolveBroadcastTarget } from '@/lib/broadcast-targets'
 import { EmailPreview } from '@/components/admin/EmailPreview'
 import { BroadcastConfirmActions } from '@/components/admin/BroadcastConfirmActions'
+import { SCORE_LABELS } from '@/lib/questions'
 import type { Broadcast, Settings } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
 const AUDIENCE_LABELS: Record<BroadcastAudience, string> = {
   all: 'All respondents',
-  at_risk: 'At risk',
-  under_strain: 'Under strain',
-  strong: 'Strong',
+  at_risk: SCORE_LABELS.at_risk,
+  under_strain: SCORE_LABELS.under_strain,
+  strong: SCORE_LABELS.strong,
 }
 
 export default async function ConfirmBroadcastPage({ params }: { params: Promise<{ id: string }> }) {

@@ -2,12 +2,13 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { SCORE_LABELS } from '@/lib/questions'
 
 const RANGES = [
   { key: 'all', label: 'All' },
-  { key: 'at_risk', label: 'At risk' },
-  { key: 'under_strain', label: 'Under strain' },
-  { key: 'strong', label: 'Strong' },
+  { key: 'at_risk', label: SCORE_LABELS.at_risk },
+  { key: 'under_strain', label: SCORE_LABELS.under_strain },
+  { key: 'strong', label: SCORE_LABELS.strong },
 ]
 
 const SORTS = [

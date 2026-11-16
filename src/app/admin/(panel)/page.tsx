@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { formatDate } from '@/lib/admin-format'
+import { SCORE_LABELS } from '@/lib/questions'
 import { RangeBadge } from '@/components/admin/RangeBadge'
 import { CopyLinkButton } from '@/components/admin/CopyLinkButton'
 import type { DashboardStats, ScoreRange } from '@/types'
@@ -33,9 +34,9 @@ export default async function AdminDashboardPage() {
     { label: 'Total respondents', value: stats.total },
     { label: 'Would love a session', value: stats.wants_support_yes },
     { label: 'Requested a session', value: stats.session_requests },
-    { label: 'Connection at risk', value: stats.at_risk },
-    { label: 'Connection under strain', value: stats.under_strain },
-    { label: 'Connection is strong', value: stats.strong },
+    { label: SCORE_LABELS.at_risk, value: stats.at_risk },
+    { label: SCORE_LABELS.under_strain, value: stats.under_strain },
+    { label: SCORE_LABELS.strong, value: stats.strong },
   ]
 
   return (

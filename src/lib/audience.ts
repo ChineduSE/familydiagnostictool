@@ -2,6 +2,8 @@
 // consented-contact total plus each score band. "individuals" is deprioritized
 // and not offered (see locked product decisions).
 
+import { SCORE_LABELS } from '@/lib/questions'
+
 export type BroadcastAudience = 'all' | 'at_risk' | 'under_strain' | 'strong'
 
 export type AudienceCounts = {
@@ -13,9 +15,9 @@ export type AudienceCounts = {
 
 export const AUDIENCE_OPTIONS: { value: BroadcastAudience; label: string }[] = [
   { value: 'all', label: 'All respondents' },
-  { value: 'at_risk', label: 'At risk' },
-  { value: 'under_strain', label: 'Under strain' },
-  { value: 'strong', label: 'Strong' },
+  { value: 'at_risk', label: SCORE_LABELS.at_risk },
+  { value: 'under_strain', label: SCORE_LABELS.under_strain },
+  { value: 'strong', label: SCORE_LABELS.strong },
 ]
 
 // Band targeting (sending to a single score band) needs Resend property-filtered
