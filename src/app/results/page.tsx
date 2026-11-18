@@ -7,6 +7,8 @@ import { loadResult } from '@/lib/quiz-store'
 import { cn } from '@/lib/utils'
 import type { QuizResult, ScoreRange } from '@/types'
 
+const WEBSITE_URL = 'https://www.ibironkeosemowo.com'
+
 const BADGE_VARIANT: Record<ScoreRange, string> = {
   at_risk: 'bg-[#fde2e2] text-[#991b1b]',
   under_strain: 'bg-[#fef3c7] text-[#92400e]',
@@ -70,6 +72,20 @@ export default function ResultsPage() {
               </p>
             )
           })}
+        </div>
+        <div className="mt-[34px] rounded-[14px] border border-black/10 bg-brand-white px-5 py-5">
+          <p className="font-display text-[22px] leading-tight">Get more from Ibironke</p>
+          <p className="mt-2 text-[15px] leading-[1.7] text-brand-muted">
+            Explore more resources, insights and ways to work with Ibironke on her website.
+          </p>
+          <a
+            href={WEBSITE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-block text-[15px] font-semibold text-brand-black underline decoration-brand-gold decoration-2 underline-offset-4 hover:decoration-brand-goldhover"
+          >
+            Visit ibironkeosemowo.com →
+          </a>
         </div>
       </section>
     </main>
